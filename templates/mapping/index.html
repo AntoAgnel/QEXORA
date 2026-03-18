@@ -1,0 +1,181 @@
+{% extends 'base.html' %}
+{% block title %}Academic Mapping – QEXORA{% endblock %}
+
+{% block page_header %}
+<h1 class="page-title">Academic Mapping</h1>
+<p class="page-sub">Select multiple questions to apply bulk mapping</p>
+{% endblock %}
+
+{% block content %}
+
+<!-- Bulk Mapping Panel -->
+<div class="bulk-panel" id="bulkPanel" style="display:none;">
+  <div class="bulk-panel-header">
+    <span id="bulkCount" class="bulk-count">0 selected</span>
+    <span class="bulk-title">Bulk Mapping</span>
+    <button class="btn btn-sm btn-outline" onclick="clearSelection()">✕ Clear</button>
+  </div>
+  <div class="form-row" style="margin-bottom:0;">
+    {% if inst == 'engineering' %}
+    <div class="form-group">
+      <label>CO</label>
+      <select id="bulkCo">
+        <option value="">— keep —</option>
+        {% for i in range(1,7) %}<option value="CO{{ i }}">CO{{ i }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>BL</label>
+      <select id="bulkBl">
+        <option value="">— keep —</option>
+        {% for lvl in ['remember','understand','apply','analyse','evaluate','create'] %}
+        <option value="{{ lvl }}">{{ lvl|capitalize }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>KC</label>
+      <select id="bulkKc">
+        <option value="">— keep —</option>
+        {% for kc in ['factual','conceptual','procedural','metacognitive'] %}
+        <option value="{{ kc }}">{{ kc|capitalize }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>PI</label>
+      <select id="bulkPi">
+        <option value="">— keep —</option>
+        {% for code in ['PI1.1','PI1.2','PI1.3','PI1.4','PI2.1','PI2.2','PI2.3','PI2.4','PI3.1','PI3.2','PI3.3','PI3.4'] %}
+        <option value="{{ code }}">{{ code }}</option>{% endfor %}
+      </select>
+    </div>
+    {% elif inst == 'arts_science' %}
+    <div class="form-group"><label>CO</label>
+      <select id="bulkCo"><option value="">— keep —</option>{% for i in range(1,6) %}<option value="CO{{ i }}">CO{{ i }}</option>{% endfor %}</select>
+    </div>
+    <div class="form-group"><label>PO</label>
+      <select id="bulkPo"><option value="">— keep —</option>{% for i in range(1,6) %}<option value="PO{{ i }}">PO{{ i }}</option>{% endfor %}</select>
+    </div>
+    <div class="form-group"><label>PSO</label>
+      <select id="bulkPso"><option value="">— keep —</option>{% for i in range(1,4) %}<option value="PSO{{ i }}">PSO{{ i }}</option>{% endfor %}</select>
+    </div>
+    {% else %}
+    <div class="form-group"><label>Learning Outcome</label>
+      <input type="text" id="bulkLo" placeholder="e.g. LO3"></div>
+    <div class="form-group"><label>Chapter</label>
+      <input type="text" id="bulkChapter" placeholder="e.g. Chapter 4"></div>
+    {% endif %}
+    <div class="form-group"><label>Difficulty</label>
+      <select id="bulkDiff">
+        <option value="">— keep —</option>
+        <option value="easy">Easy</option>
+        <option value="medium">Medium</option>
+        <option value="hard">Hard</option>
+      </select>
+    </div>
+    <div class="form-group" style="align-self:flex-end;">
+      <button class="btn btn-primary" onclick="applyBulkMapping()">Apply to Selected</button>
+    </div>
+  </div>
+</div>
+
+{% if questions %}
+<div class="table-card">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th><input type="checkbox" id="masterCheck" onchange="masterToggle(this)"></th>
+        <th>Question</th>
+        <th>Subject</th>
+        {% if inst == 'engineering' %}
+        <th>CO</th><th>BL</th><th>KC</th><th>PI</th>
+        {% elif inst == 'arts_science' %}
+        <th>CO</th><th>PO</th><th>PSO</th>
+        {% else %}
+        <th>Chapter</th><th>Learning Outcome</th>
+        {% endif %}
+        <th>Difficulty</th>
+        <th>Save</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for q in questions %}
+      <tr data-id="{{ q._id }}">
+        <td><input type="checkbox" class="row-check" value="{{ q._id }}" onchange="updateBulkPanel()"></td>
+        <td class="q-text">{{ q.text[:60] }}…</td>
+        <td>{{ q.subject }}</td>
+        <form method="POST" action="{{ url_for('mapping.update', question_id=q._id) }}">
+        {% if inst == 'engineering' %}
+          <td><select name="co">{% for i in range(1,7) %}<option value="CO{{ i }}" {% if q.co=='CO'~i %}selected{% endif %}>CO{{ i }}</option>{% endfor %}</select></td>
+          <td><select name="bl">{% for lvl in ['remember','understand','apply','analyse','evaluate','create'] %}<option value="{{ lvl }}" {% if q.bl==lvl %}selected{% endif %}>{{ lvl|capitalize }}</option>{% endfor %}</select></td>
+          <td><select name="kc">{% for kc in ['factual','conceptual','procedural','metacognitive'] %}<option value="{{ kc }}" {% if q.kc==kc %}selected{% endif %}>{{ kc[:5]|capitalize }}</option>{% endfor %}</select></td>
+          <td><select name="pi">{% for code in ['PI1.1','PI1.2','PI1.3','PI1.4','PI2.1','PI2.2','PI2.3','PI2.4','PI3.1','PI3.2','PI3.3','PI3.4'] %}<option value="{{ code }}" {% if q.pi==code %}selected{% endif %}>{{ code }}</option>{% endfor %}</select></td>
+        {% elif inst == 'arts_science' %}
+          <td><select name="co">{% for i in range(1,6) %}<option value="CO{{ i }}" {% if q.co=='CO'~i %}selected{% endif %}>CO{{ i }}</option>{% endfor %}</select></td>
+          <td><select name="po">{% for i in range(1,6) %}<option value="PO{{ i }}" {% if q.po=='PO'~i %}selected{% endif %}>PO{{ i }}</option>{% endfor %}</select></td>
+          <td><select name="pso">{% for i in range(1,4) %}<option value="PSO{{ i }}" {% if q.pso=='PSO'~i %}selected{% endif %}>PSO{{ i }}</option>{% endfor %}</select></td>
+        {% else %}
+          <td><input type="text" name="chapter" value="{{ q.chapter }}" style="width:80px"></td>
+          <td><input type="text" name="learning_outcome" value="{{ q.learning_outcome }}" style="width:80px"></td>
+        {% endif %}
+          <td><select name="difficulty">{% for d in ['easy','medium','hard'] %}<option value="{{ d }}" {% if q.difficulty==d %}selected{% endif %}>{{ d|capitalize }}</option>{% endfor %}</select></td>
+          <td><button type="submit" class="btn btn-sm btn-primary">Save</button></td>
+        </form>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="empty-state">
+  <p>No questions found. <a href="{{ url_for('questions.add') }}">Add questions first.</a></p>
+</div>
+{% endif %}
+
+<script>
+function getChecked() {
+  return [...document.querySelectorAll('.row-check:checked')].map(c => c.value);
+}
+function updateBulkPanel() {
+  const n = getChecked().length;
+  const panel = document.getElementById('bulkPanel');
+  panel.style.display = n > 0 ? 'block' : 'none';
+  document.getElementById('bulkCount').textContent = n + ' question' + (n>1?'s':'') + ' selected';
+}
+function masterToggle(cb) {
+  document.querySelectorAll('.row-check').forEach(c => c.checked = cb.checked);
+  updateBulkPanel();
+}
+function clearSelection() {
+  document.querySelectorAll('.row-check').forEach(c => c.checked = false);
+  document.getElementById('masterCheck').checked = false;
+  updateBulkPanel();
+}
+function getVal(id) {
+  const el = document.getElementById(id);
+  return el ? el.value : '';
+}
+async function applyBulkMapping() {
+  const ids = getChecked();
+  if (!ids.length) return;
+  const mapping = {};
+  ['bulkCo','bulkBl','bulkKc','bulkPi','bulkPo','bulkPso','bulkDiff','bulkLo','bulkChapter'].forEach(id => {
+    const keyMap = {bulkCo:'co',bulkBl:'bl',bulkKc:'kc',bulkPi:'pi',
+                    bulkPo:'po',bulkPso:'pso',bulkDiff:'difficulty',
+                    bulkLo:'learning_outcome',bulkChapter:'chapter'};
+    const v = getVal(id);
+    if (v) mapping[keyMap[id]] = v;
+  });
+  const res  = await fetch('/mapping/bulk-update', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ids, mapping})
+  });
+  const data = await res.json();
+  if (data.success) {
+    alert(`✓ Mapping applied to ${data.updated} question(s).`);
+    window.location.reload();
+  }
+}
+</script>
+
+{% endblock %}

@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard – QEXORA{% endblock %}
+
+{% block page_header %}
+<h1 class="page-title">Dashboard</h1>
+<p class="page-sub">Welcome back, <strong>{{ current_user.name }}</strong></p>
+{% endblock %}
+
+{% block content %}
+
+<!-- Institution Switcher Card -->
+<div class="inst-card" id="instCard">
+  <div class="inst-card-left">
+    <div class="inst-card-icon">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    </div>
+    <div>
+      <div class="inst-card-label">Current Institution</div>
+      <div class="inst-card-name" id="instCardName">
+        {{ current_user.institution_type | replace('_',' ') | title }}
+      </div>
+    </div>
+  </div>
+  <div class="inst-card-right">
+    <div class="inst-card-options" id="instCardOptions">
+      {% for inst, label, icon in [
+          ('engineering',  'Engineering College', '🏛'),
+          ('arts_science', 'Arts & Science',      '📚'),
+          ('school',       'School',               '🏫')
+      ] %}
+      <button
+        class="inst-opt-btn {% if current_user.institution_type == inst %}inst-opt-active{% endif %}"
+        data-inst="{{ inst }}"
+        data-label="{{ label }}"
+        onclick="switchInstDashboard('{{ inst }}', '{{ label }}', this)">
+        <span class="inst-opt-icon">{{ icon }}</span>
+        <span>{{ label }}</span>
+        {% if current_user.institution_type == inst %}
+        <span class="inst-opt-check">✓</span>
+        {% endif %}
+      </button>
+      {% endfor %}
+    </div>
+    <!-- Loading state -->
+    <div class="inst-card-loading" id="instCardLoading" style="display:none;">
+      <div class="inst-card-spinner"></div>
+      <span>Switching institution…</span>
+    </div>
+    <!-- Success state -->
+    <div class="inst-card-success" id="instCardSuccess" style="display:none;">
+      <span class="inst-success-icon">✓</span>
+      <span id="instCardSuccessText">Switched!</span>
+    </div>
+  </div>
+</div>
+
+<!-- Stats Grid -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-icon stat-icon--blue">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+    </div>
+    <div class="stat-info">
+      <span class="stat-value">{{ stats.total_questions }}</span>
+      <span class="stat-label">Questions in Bank</span>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon stat-icon--green">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+    </div>
+    <div class="stat-info">
+      <span class="stat-value">{{ stats.total_templates }}</span>
+      <span class="stat-label">Paper Templates</span>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon stat-icon--orange">
+      <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+    </div>
+    <div class="stat-info">
+      <span class="stat-value">{{ stats.total_papers }}</span>
+      <span class="stat-label">Papers Generated</span>
+    </div>
+  </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="section-title">Quick Actions</div>
+<div class="quick-actions">
+  <a href="{{ url_for('questions.add') }}" class="action-card">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+    Add Question
+  </a>
+  <a href="{{ url_for('paper_templates.create') }}" class="action-card">
+    <svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+    New Template
+  </a>
+  <a href="{{ url_for('generation.index') }}" class="action-card">
+    <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+    Generate Paper
+  </a>
+  <a href="{{ url_for('analytics.index') }}" class="action-card">
+    <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+    View Analytics
+  </a>
+</div>
+
+<!-- Recent Papers -->
+{% if stats.recent_papers %}
+<div class="section-title" style="margin-top:2rem;">Recent Question Papers</div>
+<div class="table-card">
+  <table class="data-table">
+    <thead>
+      <tr><th>Title</th><th>Subject</th><th>Total Marks</th><th>Generated</th><th>Action</th></tr>
+    </thead>
+    <tbody>
+      {% for paper in stats.recent_papers %}
+      <tr>
+        <td>{{ paper.title }}</td>
+        <td>{{ paper.subject or '—' }}</td>
+        <td>{{ paper.total_marks }}</td>
+        <td>{{ paper.created_at.strftime('%d %b %Y') }}</td>
+        <td><a href="{{ url_for('generation.preview', paper_id=paper._id) }}" class="btn btn-sm btn-outline">View</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+<script>
+async function switchInstDashboard(inst, label, btn) {
+  // Show loading
+  document.getElementById('instCardOptions').style.display = 'none';
+  document.getElementById('instCardLoading').style.display = 'flex';
+  document.getElementById('instCardSuccess').style.display = 'none';
+
+  try {
+    const res  = await fetch('/auth/update-institution', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({institution_type: inst})
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      // Show success briefly then reload
+      document.getElementById('instCardLoading').style.display = 'none';
+      document.getElementById('instCardSuccess').style.display = 'flex';
+      document.getElementById('instCardSuccessText').textContent = `Switched to ${label}`;
+      document.getElementById('instCardName').textContent = label;
+
+      // Also update sidebar inst name if present
+      const sidebarInst = document.getElementById('instName');
+      if (sidebarInst) sidebarInst.textContent = label;
+
+      setTimeout(() => window.location.reload(), 900);
+    }
+  } catch (e) {
+    document.getElementById('instCardLoading').style.display = 'none';
+    document.getElementById('instCardOptions').style.display = 'flex';
+  }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% block title %}{{ paper.title }} – QEXORA{% endblock %}
+
+{% block page_header %}
+<h1 class="page-title">{{ paper.title }}</h1>
+<div class="header-actions">
+  <a href="{{ url_for('editor.index', paper_id=paper._id) }}" class="btn btn-primary">✏ Open Editor</a>
+  <a href="{{ url_for('generation.export_pdf', paper_id=paper._id) }}" class="btn btn-outline">⬇ Export PDF</a>
+  <button onclick="window.print()" class="btn btn-outline">🖨 Print</button>
+  <form method="POST" action="{{ url_for('generation.delete', paper_id=paper._id) }}"
+        onsubmit="return confirm('Delete this paper?')" style="display:inline">
+    <button type="submit" class="btn btn-danger">Delete</button>
+  </form>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Analytics summary -->
+<div class="analytics-row">
+  <div class="mini-stat">
+    <span class="mini-val">{{ paper.total_marks }}</span>
+    <span class="mini-label">Total Marks</span>
+  </div>
+  <div class="mini-stat">
+    <span class="mini-val">{{ paper.analytics.total_questions }}</span>
+    <span class="mini-label">Questions</span>
+  </div>
+  {% for co, cnt in paper.analytics.co_coverage.items() %}
+  <div class="mini-stat">
+    <span class="mini-val">{{ cnt }}</span>
+    <span class="mini-label">{{ co }}</span>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Printable Paper -->
+<div class="paper-preview" id="printArea">
+  <div class="paper-header">
+    <h2>{{ paper.title }}</h2>
+    <p>Subject: {{ paper.subject or '—' }} &nbsp;|&nbsp; Total Marks: {{ paper.total_marks }}</p>
+    <p>Institution Type: {{ paper.institution_type | replace('_',' ') | title }}</p>
+    <p>Date: {{ paper.created_at.strftime('%d %B %Y') }}</p>
+  </div>
+
+  {% for section in paper.sections %}
+  <div class="paper-section">
+    <div class="paper-section-title">
+      {{ section.section_name }}
+      <span class="section-meta">({{ section.question_type | capitalize }} Answers | {{ section.marks_per_question }} Marks each)</span>
+    </div>
+    {% if section.questions %}
+    <ol class="question-list">
+      {% for q in section.questions %}
+      <li>
+        <span class="q-body">{{ q.text }}</span>
+        <span class="q-mark">[{{ section.marks_per_question }}M]</span>
+        <div class="q-mapping">
+          {% if q.co %}<span class="tag">{{ q.co }}</span>{% endif %}
+          {% if q.bl %}<span class="tag">{{ q.bl|capitalize }}</span>{% endif %}
+          {% if q.difficulty %}<span class="tag tag-diff tag-{{ q.difficulty }}">{{ q.difficulty|capitalize }}</span>{% endif %}
+        </div>
+      </li>
+      {% endfor %}
+    </ol>
+    {% else %}
+    <p class="text-muted">No questions selected for this section.</p>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+
+<!-- BL Distribution Chart -->
+{% if paper.analytics.bl_distribution %}
+<div class="analytics-charts">
+  <div class="chart-card">
+    <div class="chart-title">Bloom's Level Distribution</div>
+    <div class="bar-chart">
+      {% set total = paper.analytics.total_questions %}
+      {% for level, count in paper.analytics.bl_distribution.items() %}
+      <div class="bar-row">
+        <span class="bar-label">{{ level|capitalize }}</span>
+        <div class="bar-outer">
+          <div class="bar-inner" style="width:{{ (count/total*100)|round }}%"></div>
+        </div>
+        <span class="bar-val">{{ count }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="chart-card">
+    <div class="chart-title">Difficulty Distribution</div>
+    <div class="bar-chart">
+      {% for diff, count in paper.analytics.difficulty_distribution.items() %}
+      <div class="bar-row">
+        <span class="bar-label">{{ diff|capitalize }}</span>
+        <div class="bar-outer">
+          <div class="bar-inner bar-{{ diff }}" style="width:{{ (count/total*100)|round if total else 0 }}%"></div>
+        </div>
+        <span class="bar-val">{{ count }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

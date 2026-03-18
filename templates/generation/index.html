@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}Generate Paper – QEXORA{% endblock %}
+
+{% block page_header %}
+<h1 class="page-title">Generate Question Paper</h1>
+{% endblock %}
+
+{% block content %}
+<div class="form-card">
+  <form method="POST" action="{{ url_for('generation.generate') }}">
+    <div class="form-row">
+      <div class="form-group">
+        <label>Paper Title</label>
+        <input type="text" name="title" required placeholder="e.g. Mid Semester Examination – Nov 2025">
+      </div>
+      <div class="form-group">
+        <label>Subject (optional filter)</label>
+        <input type="text" name="subject" placeholder="Leave blank for all subjects">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Select Template</label>
+      {% if templates %}
+      <div class="template-picker">
+        {% for t in templates %}
+        <label class="template-pick-card">
+          <input type="radio" name="template_id" value="{{ t._id }}" {% if loop.first %}checked{% endif %}>
+          <div class="pick-card-body">
+            <span class="pick-name">{{ t.name }}</span>
+            <span class="pick-meta">{{ t.total_marks }} Marks · {{ t.sections|length }} Sections</span>
+          </div>
+        </label>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="text-muted">No templates found. <a href="{{ url_for('paper_templates.create') }}">Create one first.</a></p>
+      {% endif %}
+    </div>
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary" {% if not templates %}disabled{% endif %}>⚡ Generate Paper</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

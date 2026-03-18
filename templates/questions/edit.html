@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% block title %}Edit Question – QEXORA{% endblock %}
+
+{% block page_header %}
+<h1 class="page-title">Edit Question</h1>
+<a href="{{ url_for('questions.index') }}" class="btn btn-outline">← Back</a>
+{% endblock %}
+
+{% block content %}
+<div class="form-card">
+  <form method="POST">
+    <div class="form-row">
+      <div class="form-group full-width">
+        <label>Question Text</label>
+        <textarea name="text" rows="4" required>{{ question.text }}</textarea>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Subject</label>
+        <input type="text" name="subject" value="{{ question.subject }}" required>
+      </div>
+      <div class="form-group">
+        <label>Unit / Chapter</label>
+        <input type="text" name="unit" value="{{ question.unit }}">
+      </div>
+      <div class="form-group">
+        <label>Marks</label>
+        <input type="number" name="marks" value="{{ question.marks }}" min="1" max="20">
+      </div>
+      <div class="form-group">
+        <label>Difficulty</label>
+        <select name="difficulty">
+          {% for d in ['easy','medium','hard'] %}
+          <option value="{{ d }}" {% if question.difficulty == d %}selected{% endif %}>{{ d|capitalize }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    {% if question.institution_type == 'engineering' %}
+    <div class="mapping-section">
+      <div class="mapping-title">Engineering Mapping</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>CO</label>
+          <select name="co">
+            {% for i in range(1,7) %}<option value="CO{{ i }}" {% if question.co == 'CO'~i %}selected{% endif %}>CO{{ i }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>BL</label>
+          <select name="bl">
+            {% for lvl in ['remember','understand','apply','analyse','evaluate','create'] %}
+            <option value="{{ lvl }}" {% if question.bl == lvl %}selected{% endif %}>{{ lvl|capitalize }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>KC</label>
+          <select name="kc">
+            {% for kc in ['factual','conceptual','procedural','metacognitive'] %}
+            <option value="{{ kc }}" {% if question.kc == kc %}selected{% endif %}>{{ kc|capitalize }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>PI</label>
+          <input type="text" name="pi" value="{{ question.pi }}">
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">Update Question</button>
+      <a href="{{ url_for('questions.index') }}" class="btn btn-outline">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

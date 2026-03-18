@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}Templates – QEXORA{% endblock %}
+
+{% block page_header %}
+<h1 class="page-title">Paper Templates</h1>
+<a href="{{ url_for('paper_templates.create') }}" class="btn btn-primary">+ New Template</a>
+{% endblock %}
+
+{% block content %}
+{% if templates %}
+<div class="cards-grid">
+  {% for t in templates %}
+  <div class="template-card">
+    <div class="template-card-header">
+      <span class="template-name">{{ t.name }}</span>
+      {% if t.is_default %}<span class="badge badge-default">Default</span>{% endif %}
+    </div>
+    <div class="template-meta">
+      <span>{{ t.institution_type | replace('_',' ') | title }}</span>
+      <span>{{ t.total_marks }} Marks</span>
+      <span>{{ t.sections | length }} Sections</span>
+    </div>
+    <ul class="section-list">
+      {% for sec in t.sections %}
+      <li>
+        <strong>{{ sec.section_name }}</strong> —
+        {{ sec.num_questions }} × {{ sec.marks_per_question }}M
+        <span class="badge badge-diff badge-medium">{{ sec.question_type }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+    <div class="template-actions">
+      <a href="{{ url_for('generation.index') }}?template={{ t._id }}" class="btn btn-sm btn-primary">Use</a>
+      {% if not t.is_default %}
+      <form method="POST" action="{{ url_for('paper_templates.delete', template_id=t._id) }}" onsubmit="return confirm('Delete this template?')">
+        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+  <p>No templates yet. <a href="{{ url_for('paper_templates.create') }}">Create one</a></p>
+</div>
+{% endif %}
+{% endblock %}

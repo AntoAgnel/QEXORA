@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% block title %}Analytics – QEXORA{% endblock %}
+
+{% block page_header %}
+<h1 class="page-title">Analytics & CO Attainment</h1>
+{% endblock %}
+
+{% block content %}
+<div class="analytics-cards">
+  <!-- CO Attainment -->
+  <div class="chart-card big">
+    <div class="chart-title">Course Outcome (CO) Attainment</div>
+    {% if co_attainment %}
+    <div class="bar-chart">
+      {% set max_co = co_attainment.values()|max %}
+      {% for co, count in co_attainment.items() %}
+      <div class="bar-row">
+        <span class="bar-label">{{ co }}</span>
+        <div class="bar-outer">
+          <div class="bar-inner bar-blue" style="width:{{ (count/max_co*100)|round }}%"></div>
+        </div>
+        <span class="bar-val">{{ count }} questions</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-muted">No data yet. Generate some question papers first.</p>
+    {% endif %}
+  </div>
+
+  <!-- BL Distribution -->
+  <div class="chart-card">
+    <div class="chart-title">Bloom's Level Spread (All Papers)</div>
+    {% if bl_total %}
+    {% set bl_max = bl_total.values()|max %}
+    <div class="bar-chart">
+      {% for level, count in bl_total.items() %}
+      <div class="bar-row">
+        <span class="bar-label">{{ level|capitalize }}</span>
+        <div class="bar-outer">
+          <div class="bar-inner bar-green" style="width:{{ (count/bl_max*100)|round }}%"></div>
+        </div>
+        <span class="bar-val">{{ count }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-muted">No data yet.</p>
+    {% endif %}
+  </div>
+
+  <!-- Difficulty -->
+  <div class="chart-card">
+    <div class="chart-title">Difficulty Spread (All Papers)</div>
+    {% if diff_total %}
+    {% set d_total = diff_total.values()|sum %}
+    <div class="donut-row">
+      {% for diff, count in diff_total.items() %}
+      <div class="donut-item donut-{{ diff }}">
+        <span class="donut-pct">{{ ((count/d_total)*100)|round|int if d_total else 0 }}%</span>
+        <span class="donut-label">{{ diff|capitalize }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-muted">No data yet.</p>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Papers Table -->
+<div class="section-title" style="margin-top:2rem;">All Generated Papers</div>
+{% if papers %}
+<div class="table-card">
+  <table class="data-table">
+    <thead>
+      <tr><th>Title</th><th>Subject</th><th>Total Marks</th><th>Questions</th><th>Date</th><th>Action</th></tr>
+    </thead>
+    <tbody>
+      {% for paper in papers %}
+      <tr>
+        <td>{{ paper.title }}</td>
+        <td>{{ paper.subject or '—' }}</td>
+        <td>{{ paper.total_marks }}</td>
+        <td>{{ paper.analytics.total_questions }}</td>
+        <td>{{ paper.created_at.strftime('%d %b %Y') }}</td>
+        <td><a href="{{ url_for('generation.preview', paper_id=paper._id) }}" class="btn btn-sm btn-outline">View</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="empty-state"><p>No papers generated yet.</p></div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,283 @@
+{% extends 'base.html' %}
+{% block title %}Add Question – QEXORA{% endblock %}
+
+{% block page_header %}
+<h1 class="page-title">Add Question</h1>
+<a href="{{ url_for('questions.index') }}" class="btn btn-outline">← Back</a>
+{% endblock %}
+
+{% block content %}
+<div class="form-card">
+  <form method="POST" id="questionForm">
+
+    <div class="form-row">
+      <div class="form-group full-width">
+        <label>Question Text</label>
+        <textarea name="text" id="questionText" rows="4" required
+          placeholder="Enter your question here… e.g. Define branching strategy in the context of machine learning projects."></textarea>
+        <button type="button" class="btn btn-sm btn-ai" id="aiSuggestBtn">✦ AI Suggest Mapping</button>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Subject</label>
+        <input type="text" name="subject" required placeholder="e.g. Data Structures">
+      </div>
+      <div class="form-group">
+        <label>Unit / Chapter</label>
+        <input type="text" name="unit" placeholder="e.g. Unit 2">
+      </div>
+      <div class="form-group">
+        <label>Marks</label>
+        <input type="number" name="marks" id="marksField" value="2" min="1" max="20" required>
+      </div>
+      <div class="form-group">
+        <label>Difficulty</label>
+        <select name="difficulty" id="difficultyField">
+          <option value="easy">Easy</option>
+          <option value="medium" selected>Medium</option>
+          <option value="hard">Hard</option>
+        </select>
+      </div>
+    </div>
+
+    {% if current_user.institution_type == 'engineering' %}
+    <div class="mapping-section">
+      <div class="mapping-title">Engineering Academic Mapping</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Course Outcome (CO)</label>
+          <select name="co" id="coField">
+            <option value="">Select CO</option>
+            {% for i in range(1,7) %}<option value="CO{{ i }}">CO{{ i }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Bloom's Level (BL)</label>
+          <select name="bl" id="blField">
+            <option value="">Select BL</option>
+            <option value="remember">Remember</option>
+            <option value="understand">Understand</option>
+            <option value="apply">Apply</option>
+            <option value="analyse">Analyse</option>
+            <option value="evaluate">Evaluate</option>
+            <option value="create">Create</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Knowledge Category (KC)</label>
+          <select name="kc" id="kcField">
+            <option value="">Select KC</option>
+            <option value="factual">Factual</option>
+            <option value="conceptual">Conceptual</option>
+            <option value="procedural">Procedural</option>
+            <option value="metacognitive">Metacognitive</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Program Indicator (PI)</label>
+          <select name="pi" id="piField">
+            <option value="">Select PI</option>
+            {% for code, desc in pi_codes.items() %}
+            <option value="{{ code }}">{{ code }} – {{ desc[:50] }}{% if desc|length > 50 %}…{% endif %}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div id="piDescBox" class="pi-desc-box" style="display:none;">
+        <span class="pi-desc-label">📌 PI Description:</span>
+        <span id="piDescText"></span>
+      </div>
+    </div>
+
+    {% elif current_user.institution_type == 'arts_science' %}
+    <div class="mapping-section">
+      <div class="mapping-title">Arts &amp; Science Academic Mapping</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Course Outcome (CO)</label>
+          <select name="co" id="coField">
+            <option value="">Select CO</option>
+            {% for i in range(1,6) %}<option value="CO{{ i }}">CO{{ i }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Program Outcome (PO)</label>
+          <select name="po" id="poField">
+            <option value="">Select PO</option>
+            {% for i in range(1,6) %}<option value="PO{{ i }}">PO{{ i }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Program Specific Outcome (PSO)</label>
+          <select name="pso" id="psoField">
+            <option value="">Select PSO</option>
+            {% for i in range(1,4) %}<option value="PSO{{ i }}">PSO{{ i }}</option>{% endfor %}
+          </select>
+        </div>
+      </div>
+    </div>
+
+    {% elif current_user.institution_type == 'school' %}
+    <div class="mapping-section">
+      <div class="mapping-title">School Academic Mapping</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Chapter</label>
+          <input type="text" name="chapter" placeholder="e.g. Chapter 3">
+        </div>
+        <div class="form-group">
+          <label>Learning Outcome</label>
+          <input type="text" name="learning_outcome" id="loField" placeholder="e.g. LO2">
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- AI Result Panel -->
+    <div id="aiResultPanel" class="ai-result-panel" style="display:none;">
+      <div class="ai-result-header">
+        <span class="ai-badge">✦ Claude AI Mapping Result</span>
+        <span id="aiSourceBadge" class="ai-source-badge"></span>
+      </div>
+      <div class="ai-result-grid">
+        <div class="ai-result-item"><span class="ai-result-label">BL</span><span class="ai-result-value" id="rBL">—</span></div>
+        <div class="ai-result-item"><span class="ai-result-label">KC</span><span class="ai-result-value" id="rKC">—</span></div>
+        <div class="ai-result-item"><span class="ai-result-label">CO</span><span class="ai-result-value" id="rCO">—</span></div>
+        <div class="ai-result-item"><span class="ai-result-label">PI</span><span class="ai-result-value" id="rPI">—</span></div>
+        <div class="ai-result-item"><span class="ai-result-label">Difficulty</span><span class="ai-result-value" id="rDiff">—</span></div>
+        <div class="ai-result-item"><span class="ai-result-label">Marks</span><span class="ai-result-value" id="rMarks">—</span></div>
+      </div>
+      <div class="pi-analysis-box" id="piAnalysisBox" style="display:none;">
+        <div class="pi-analysis-title">📌 PI Code Analysis</div>
+        <div class="pi-analysis-content">
+          <strong id="piCodeDisplay"></strong>
+          <p id="piDescDisplay"></p>
+        </div>
+      </div>
+      <div class="ai-reasoning-box" id="aiReasoningBox" style="display:none;">
+        <div class="ai-reasoning-title">🧠 AI Reasoning</div>
+        <table class="reasoning-table">
+          <tr><td><b>BL</b></td><td id="rBlReason">—</td></tr>
+          <tr><td><b>KC</b></td><td id="rKcReason">—</td></tr>
+          <tr><td><b>CO</b></td><td id="rCoReason">—</td></tr>
+          <tr><td><b>PI</b></td><td id="rPiReason">—</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">Save Question</button>
+      <a href="{{ url_for('questions.index') }}" class="btn btn-outline">Cancel</a>
+    </div>
+  </form>
+</div>
+
+<script>
+const PI_CODES = {{ pi_codes | tojson }};
+
+// Manual PI selection shows description
+const piField = document.getElementById('piField');
+if (piField) {
+  piField.addEventListener('change', () => {
+    const code = piField.value;
+    const box  = document.getElementById('piDescBox');
+    const txt  = document.getElementById('piDescText');
+    if (code && PI_CODES[code]) {
+      txt.textContent = PI_CODES[code];
+      box.style.display = 'flex';
+    } else {
+      box.style.display = 'none';
+    }
+  });
+}
+
+document.getElementById('aiSuggestBtn').addEventListener('click', async () => {
+  const text = document.getElementById('questionText').value.trim();
+  if (!text) { alert('Please enter the question text first.'); return; }
+
+  const btn = document.getElementById('aiSuggestBtn');
+  btn.textContent = '⏳ Claude AI is analysing…';
+  btn.disabled = true;
+
+  try {
+    const res  = await fetch('/questions/ai-suggest', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text })
+    });
+    const data = await res.json();
+    if (data.error) { alert('Error: ' + data.error); return; }
+
+    // Auto-fill fields
+    const set = (id, val) => { const el = document.getElementById(id); if (el && val !== undefined) el.value = val; };
+    set('blField',         data.bl);
+    set('kcField',         data.kc);
+    set('coField',         data.co);
+    set('piField',         data.pi);
+    set('difficultyField', data.difficulty);
+    set('marksField',      data.marks);
+    if (data.learning_outcome) set('loField', data.learning_outcome);
+
+    // PI desc inline
+    if (data.pi && data.pi_description) {
+      const db = document.getElementById('piDescBox');
+      if (db) {
+        document.getElementById('piDescText').textContent = data.pi_description;
+        db.style.display = 'flex';
+      }
+    }
+
+    // Show result panel
+    document.getElementById('aiResultPanel').style.display = 'block';
+    const cap = s => s ? s.replace(/^\w/, c => c.toUpperCase()) : '—';
+    document.getElementById('rBL').textContent    = cap(data.bl);
+    document.getElementById('rKC').textContent    = cap(data.kc);
+    document.getElementById('rCO').textContent    = data.co    || '—';
+    document.getElementById('rPI').textContent    = data.pi    || '—';
+    document.getElementById('rDiff').textContent  = cap(data.difficulty);
+    document.getElementById('rMarks').textContent = data.marks || '—';
+
+    // Source badge
+    const src = document.getElementById('aiSourceBadge');
+    if (data.source === 'groq_llama3') {
+      src.textContent = '✓ Powered by Groq Llama 3.3 (Free)';
+      src.className   = 'ai-source-badge source-claude';
+    } else if (data.source === 'gemini_flash') {
+      src.textContent = '✓ Powered by Google Gemini (Free)';
+      src.className   = 'ai-source-badge source-claude';
+    } else if (data.source === 'claude_ai') {
+      src.textContent = '✓ Powered by Claude AI';
+      src.className   = 'ai-source-badge source-claude';
+    } else {
+      src.textContent = '⚠ Keyword Fallback – Add GROQ_API_KEY or GEMINI_API_KEY to .env';
+      src.className   = 'ai-source-badge source-fallback';
+    }
+
+    // PI Analysis
+    if (data.pi && data.pi_description) {
+      document.getElementById('piCodeDisplay').textContent = data.pi;
+      document.getElementById('piDescDisplay').textContent = data.pi_description;
+      document.getElementById('piAnalysisBox').style.display = 'block';
+    }
+
+    // Reasoning
+    if (data.reasoning) {
+      const r = data.reasoning;
+      document.getElementById('rBlReason').textContent = r.bl_reason || '—';
+      document.getElementById('rKcReason').textContent = r.kc_reason || '—';
+      document.getElementById('rCoReason').textContent = r.co_reason || '—';
+      document.getElementById('rPiReason').textContent = r.pi_reason || '—';
+      document.getElementById('aiReasoningBox').style.display = 'block';
+    }
+
+  } catch (err) {
+    alert('AI mapping request failed: ' + err.message);
+  } finally {
+    btn.textContent = '✦ AI Suggest Mapping';
+    btn.disabled    = false;
+  }
+});
+</script>
+{% endblock %}

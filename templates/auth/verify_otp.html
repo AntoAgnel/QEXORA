@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block title %}Verify OTP – QEXORA{% endblock %}
+{% block auth_content %}
+<div class="auth-wrapper">
+  <div class="auth-brand">
+    <h1><span class="logo-q">Q</span>EXORA</h1>
+  </div>
+  <div class="auth-card">
+    <div class="auth-icon-top">📧</div>
+    <h2>Check Your Email</h2>
+    <p class="auth-sub">We sent a 6-digit OTP to <strong>{{ email }}</strong>. Enter it below to continue.</p>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}{% for cat, msg in messages %}
+        <div class="alert alert-{{ cat }}">{{ msg }}</div>
+      {% endfor %}{% endif %}
+    {% endwith %}
+    <form method="POST">
+      <div class="form-group">
+        <label>6-Digit OTP</label>
+        <input type="text" name="otp" required maxlength="6" placeholder="_ _ _ _ _ _"
+               class="otp-input" autofocus autocomplete="one-time-code">
+      </div>
+      <button type="submit" class="btn btn-primary btn-full">Verify OTP</button>
+    </form>
+    <div style="text-align:center;margin-top:1rem;">
+      <p class="auth-sub" id="timerText">OTP expires in <span id="countdown" style="color:var(--accent);font-weight:700;">10:00</span></p>
+      <button class="btn btn-outline btn-sm" id="resendBtn" onclick="resendOtp()" style="margin-top:8px;">Resend OTP</button>
+    </div>
+    <p class="auth-footer"><a href="{{ url_for('auth.forgot_password') }}">← Use a different email</a></p>
+  </div>
+</div>
+<script>
+// Countdown timer
+let seconds = 600;
+const cd = document.getElementById('countdown');
+const timer = setInterval(() => {
+  seconds--;
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  cd.textContent = `${m}:${s.toString().padStart(2,'0')}`;
+  if (seconds <= 0) {
+    clearInterval(timer);
+    cd.textContent = 'Expired';
+    cd.style.color = 'var(--hard)';
+  }
+}, 1000);
+
+async function resendOtp() {
+  const btn = document.getElementById('resendBtn');
+  btn.disabled = true;
+  btn.textContent = 'Sending…';
+  const res = await fetch('/auth/resend-otp', {method:'POST'});
+  const data = await res.json();
+  if (data.success) {
+    btn.textContent = '✓ OTP Resent';
+    seconds = 600;
+  } else {
+    btn.textContent = 'Resend OTP';
+    btn.disabled = false;
+  }
+}
+</script>
+{% endblock %}

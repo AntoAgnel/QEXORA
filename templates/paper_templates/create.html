@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% block title %}Create Template – QEXORA{% endblock %}
+
+{% block page_header %}
+<h1 class="page-title">Create Template</h1>
+<a href="{{ url_for('paper_templates.index') }}" class="btn btn-outline">← Back</a>
+{% endblock %}
+
+{% block content %}
+<div class="form-card">
+  <form method="POST" id="templateForm">
+    <div class="form-row">
+      <div class="form-group">
+        <label>Template Name</label>
+        <input type="text" name="name" required placeholder="e.g. Mid-Sem Exam 50 Marks">
+      </div>
+      <div class="form-group">
+        <label>Subject</label>
+        <input type="text" name="subject" placeholder="Optional">
+      </div>
+      <div class="form-group">
+        <label>Total Marks</label>
+        <input type="number" name="total_marks" value="100" min="1" id="totalMarks">
+      </div>
+    </div>
+
+    <div class="section-builder">
+      <div class="section-builder-header">
+        <span class="mapping-title">Sections</span>
+        <button type="button" class="btn btn-sm btn-outline" id="addSection">+ Add Section</button>
+      </div>
+      <div id="sectionsContainer"></div>
+    </div>
+
+    <input type="hidden" name="sections_json" id="sectionsJson">
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary" id="saveBtn">Save Template</button>
+      <a href="{{ url_for('paper_templates.index') }}" class="btn btn-outline">Cancel</a>
+    </div>
+  </form>
+</div>
+
+<script>
+let sections = [];
+
+function renderSections() {
+  const container = document.getElementById('sectionsContainer');
+  container.innerHTML = '';
+  sections.forEach((sec, idx) => {
+    container.innerHTML += `
+    <div class="section-row" data-idx="${idx}">
+      <div class="form-row">
+        <div class="form-group"><label>Section Name</label>
+          <input type="text" value="${sec.section_name}" onchange="updateSection(${idx},'section_name',this.value)" placeholder="Part A">
+        </div>
+        <div class="form-group"><label>Question Type</label>
+          <select onchange="updateSection(${idx},'question_type',this.value)">
+            ${['short','long','mcq','paragraph','essay'].map(t=>`<option value="${t}" ${sec.question_type===t?'selected':''}>${t}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group"><label>No. of Questions</label>
+          <input type="number" value="${sec.num_questions}" min="1" onchange="updateSection(${idx},'num_questions',+this.value)">
+        </div>
+        <div class="form-group"><label>Marks Each</label>
+          <input type="number" value="${sec.marks_per_question}" min="1" onchange="updateSection(${idx},'marks_per_question',+this.value)">
+        </div>
+        <div class="form-group"><label>Easy %</label>
+          <input type="number" value="${sec.difficulty_ratio.easy*100}" min="0" max="100" onchange="updateDiff(${idx},'easy',+this.value)">
+        </div>
+        <div class="form-group"><label>Medium %</label>
+          <input type="number" value="${sec.difficulty_ratio.medium*100}" min="0" max="100" onchange="updateDiff(${idx},'medium',+this.value)">
+        </div>
+        <div class="form-group"><label>Hard %</label>
+          <input type="number" value="${sec.difficulty_ratio.hard*100}" min="0" max="100" onchange="updateDiff(${idx},'hard',+this.value)">
+        </div>
+        <div class="form-group" style="align-self:flex-end;">
+          <button type="button" class="btn btn-sm btn-danger" onclick="removeSection(${idx})">Remove</button>
+        </div>
+      </div>
+    </div>`;
+  });
+}
+
+function updateSection(idx, key, value) { sections[idx][key] = value; }
+function updateDiff(idx, key, value) { sections[idx].difficulty_ratio[key] = value / 100; }
+function removeSection(idx) { sections.splice(idx, 1); renderSections(); }
+
+document.getElementById('addSection').addEventListener('click', () => {
+  sections.push({
+    section_name: `Part ${String.fromCharCode(65+sections.length)}`,
+    question_type: 'short', num_questions: 5, marks_per_question: 2,
+    difficulty_ratio: { easy: 0.4, medium: 0.4, hard: 0.2 }
+  });
+  renderSections();
+});
+
+document.getElementById('templateForm').addEventListener('submit', e => {
+  document.getElementById('sectionsJson').value = JSON.stringify(sections);
+});
+
+// Start with one section
+document.getElementById('addSection').click();
+</script>
+{% endblock %}

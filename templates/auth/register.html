@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block title %}Register – QEXORA{% endblock %}
+
+{% block auth_content %}
+<div class="auth-wrapper">
+  <div class="auth-brand">
+    <h1><span class="logo-q">Q</span>EXORA</h1>
+    <p>Intelligent Academic Mapping &amp; Question Paper Generation</p>
+  </div>
+  <div class="auth-card">
+    <h2>Create Account</h2>
+    <p class="auth-sub">Join QEXORA to get started</p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}{% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+      {% endfor %}{% endif %}
+    {% endwith %}
+
+    <form method="POST">
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" name="name" required placeholder="Dr. John Smith">
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" name="email" required placeholder="you@example.com">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" name="password" required placeholder="Min 8 characters">
+      </div>
+      <button type="submit" class="btn btn-primary btn-full">Create Account</button>
+    </form>
+    <p class="auth-sub" style="margin-top:1rem;font-size:0.78rem;color:var(--text-muted);text-align:center;">
+      Your role and institution will be assigned by the administrator after registration.
+    </p>
+    <p class="auth-footer">Already have an account? <a href="{{ url_for('auth.login') }}">Sign in</a></p>
+  </div>
+</div>
+{% endblock %}

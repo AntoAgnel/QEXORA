@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+{% block title %}Question Bank – QEXORA{% endblock %}
+
+{% block page_header %}
+<h1 class="page-title">Question Bank</h1>
+<div class="header-actions">
+  <button class="btn btn-outline" id="selectAllBtn" onclick="toggleSelectAll()">☐ Select All</button>
+  <button class="btn btn-outline" id="exportSelectedBtn" onclick="exportSelected()" style="display:none;">⬇ PDF (Selected)</button>
+  <button class="btn btn-outline" id="printSelectedBtn" onclick="printSelected()" style="display:none;">🖨 Print (Selected)</button>
+  <button class="btn btn-danger"  id="deleteSelectedBtn" onclick="deleteSelected()" style="display:none;">🗑 Delete Selected</button>
+  <a href="{{ url_for('questions.export_pdf') }}" class="btn btn-outline">⬇ PDF (All)</a>
+  <button onclick="handlePrint()" class="btn btn-outline">🖨 Print</button>
+  <a href="{{ url_for('questions.add') }}" class="btn btn-primary">+ Add Question</a>
+</div>
+{% endblock %}
+
+{% block content %}
+
+<!-- Print notification toast -->
+<div id="printToast" class="print-toast" style="display:none;">
+  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+  Please select at least one question to print.
+</div>
+
+<div class="table-card">
+  {% if questions %}
+  <table class="data-table" id="qbankTable">
+    <thead>
+      <tr>
+        <th class="no-print"><input type="checkbox" id="masterCheck" onchange="masterToggle(this)"></th>
+        <th>#</th>
+        <th>Question</th>
+        <th>Subject</th>
+        <th>Marks</th>
+        <th>Difficulty</th>
+        <th>CO</th>
+        <th>BL</th>
+        <th class="no-print">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for q in questions %}
+      <tr data-id="{{ q._id }}" class="q-row">
+        <td class="no-print"><input type="checkbox" class="row-check" value="{{ q._id }}" onchange="updateBulkButtons()"></td>
+        <td>{{ loop.index }}</td>
+        <td class="q-text">{{ q.text[:80] }}{% if q.text|length > 80 %}…{% endif %}</td>
+        <td>{{ q.subject }}</td>
+        <td>{{ q.marks }}</td>
+        <td><span class="badge badge-diff badge-{{ q.difficulty }}">{{ q.difficulty|capitalize }}</span></td>
+        <td>{{ q.co or '—' }}</td>
+        <td>{{ q.bl or '—' }}</td>
+        <td class="no-print actions-cell">
+          <a href="{{ url_for('questions.edit', question_id=q._id) }}" class="btn btn-sm btn-outline">Edit</a>
+          <form method="POST" action="{{ url_for('questions.delete', question_id=q._id) }}"
+                style="display:inline;" onsubmit="return confirm('Delete this question?')">
+            <button type="submit" class="btn btn-sm btn-danger">Del</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="empty-state">
+    <p>No questions yet. <a href="{{ url_for('questions.add') }}">Add your first question</a></p>
+  </div>
+  {% endif %}
+</div>
+
+<script>
+function getChecked() {
+  return [...document.querySelectorAll('.row-check:checked')].map(c => c.value);
+}
+
+function updateBulkButtons() {
+  const n = getChecked().length;
+  document.getElementById('exportSelectedBtn').style.display  = n > 0 ? 'inline-flex' : 'none';
+  document.getElementById('printSelectedBtn').style.display   = n > 0 ? 'inline-flex' : 'none';
+  document.getElementById('deleteSelectedBtn').style.display  = n > 0 ? 'inline-flex' : 'none';
+  document.getElementById('selectAllBtn').textContent = n > 0 ? `☑ ${n} Selected` : '☐ Select All';
+}
+
+function masterToggle(cb) {
+  document.querySelectorAll('.row-check').forEach(c => c.checked = cb.checked);
+  updateBulkButtons();
+}
+
+function toggleSelectAll() {
+  const all = document.querySelectorAll('.row-check');
+  const anyUnchecked = [...all].some(c => !c.checked);
+  all.forEach(c => c.checked = anyUnchecked);
+  document.getElementById('masterCheck').checked = anyUnchecked;
+  updateBulkButtons();
+}
+
+function exportSelected() {
+  const ids = getChecked();
+  if (!ids.length) return;
+  window.location.href = '/questions/export/pdf?ids=' + ids.join(',');
+}
+
+// Print only selected rows
+function printSelected() {
+  const ids = getChecked();
+  if (!ids.length) { showPrintToast(); return; }
+  // Hide unselected rows for printing
+  document.querySelectorAll('.q-row').forEach(row => {
+    row.classList.toggle('print-hide', !ids.includes(row.dataset.id));
+  });
+  window.print();
+  // Restore all rows after print dialog closes
+  document.querySelectorAll('.q-row').forEach(row => row.classList.remove('print-hide'));
+}
+
+// Print button (no selection) — show notification
+function handlePrint() {
+  const ids = getChecked();
+  if (!ids.length) { showPrintToast(); return; }
+  printSelected();
+}
+
+function showPrintToast() {
+  const toast = document.getElementById('printToast');
+  toast.style.display = 'flex';
+  toast.classList.add('toast-show');
+  setTimeout(() => {
+    toast.classList.remove('toast-show');
+    setTimeout(() => toast.style.display = 'none', 400);
+  }, 3000);
+}
+
+async function deleteSelected() {
+  const ids = getChecked();
+  if (!ids.length) return;
+  if (!confirm(`Delete ${ids.length} selected question(s)?`)) return;
+  const res  = await fetch('/questions/delete-multiple', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ids})
+  });
+  const data = await res.json();
+  if (data.success) window.location.reload();
+}
+</script>
+{% endblock %}

@@ -1,0 +1,340 @@
+"""
+seed_db.py – Run once to populate default templates + rich sample questions
+for all three institution types (Engineering, Arts & Science, School).
+Usage:  python seed_db.py
+"""
+from app import create_app
+from extensions import mongo
+from models.paper_template import PaperTemplate
+from datetime import datetime
+
+app = create_app()
+
+# ═══════════════════════════════════════════════════════════════════════════
+# ENGINEERING – Data Structures & Algorithms  (30 questions)
+# ═══════════════════════════════════════════════════════════════════════════
+ENGINEERING_QUESTIONS = [
+    # Easy (10)
+    dict(text="Define data structure and list its types.",
+         subject="Data Structures", unit="Unit 1", marks=2, difficulty="easy",
+         co="CO1", bl="remember", kc="factual", pi="PI1.1"),
+    dict(text="State the LIFO principle used in stack operations.",
+         subject="Data Structures", unit="Unit 1", marks=2, difficulty="easy",
+         co="CO1", bl="remember", kc="factual", pi="PI1.1"),
+    dict(text="List the differences between stack and queue.",
+         subject="Data Structures", unit="Unit 1", marks=2, difficulty="easy",
+         co="CO1", bl="remember", kc="conceptual", pi="PI1.2"),
+    dict(text="Define sorting. Name any two comparison-based sorting algorithms.",
+         subject="Data Structures", unit="Unit 3", marks=2, difficulty="easy",
+         co="CO1", bl="remember", kc="factual", pi="PI1.1"),
+    dict(text="State the Big-O time complexity of linear search.",
+         subject="Data Structures", unit="Unit 3", marks=2, difficulty="easy",
+         co="CO2", bl="remember", kc="factual", pi="PI1.2"),
+    dict(text="Identify the data structure used in function call management.",
+         subject="Data Structures", unit="Unit 1", marks=2, difficulty="easy",
+         co="CO1", bl="remember", kc="factual", pi="PI1.1"),
+    dict(text="Name the traversal orders possible in a binary tree.",
+         subject="Data Structures", unit="Unit 4", marks=2, difficulty="easy",
+         co="CO2", bl="remember", kc="factual", pi="PI1.2"),
+    dict(text="Define linked list and state its advantage over arrays.",
+         subject="Data Structures", unit="Unit 2", marks=2, difficulty="easy",
+         co="CO1", bl="remember", kc="factual", pi="PI1.1"),
+    dict(text="State the properties of a complete binary tree.",
+         subject="Data Structures", unit="Unit 4", marks=2, difficulty="easy",
+         co="CO2", bl="remember", kc="factual", pi="PI1.2"),
+    dict(text="List any four operations performed on a queue.",
+         subject="Data Structures", unit="Unit 1", marks=2, difficulty="easy",
+         co="CO1", bl="remember", kc="factual", pi="PI1.1"),
+    # Medium (10)
+    dict(text="Explain the working of a circular queue with a suitable example.",
+         subject="Data Structures", unit="Unit 1", marks=6, difficulty="medium",
+         co="CO2", bl="understand", kc="conceptual", pi="PI2.1"),
+    dict(text="Apply bubble sort on the array [64,34,25,12,22,11,90] and trace all passes.",
+         subject="Data Structures", unit="Unit 3", marks=6, difficulty="medium",
+         co="CO3", bl="apply", kc="procedural", pi="PI2.2"),
+    dict(text="Explain binary search tree insertion with a step-by-step example.",
+         subject="Data Structures", unit="Unit 4", marks=6, difficulty="medium",
+         co="CO3", bl="understand", kc="conceptual", pi="PI2.1"),
+    dict(text="Describe inorder, preorder, and postorder traversal of a binary tree with examples.",
+         subject="Data Structures", unit="Unit 4", marks=6, difficulty="medium",
+         co="CO3", bl="understand", kc="conceptual", pi="PI2.1"),
+    dict(text="Solve the Tower of Hanoi problem for n=3 using recursion and trace all moves.",
+         subject="Data Structures", unit="Unit 2", marks=6, difficulty="medium",
+         co="CO3", bl="apply", kc="procedural", pi="PI2.2"),
+    dict(text="Explain the concept of hashing. Describe any two collision resolution techniques.",
+         subject="Data Structures", unit="Unit 5", marks=6, difficulty="medium",
+         co="CO3", bl="understand", kc="conceptual", pi="PI2.1"),
+    dict(text="Apply insertion sort on [12,11,13,5,6] and show each step of the algorithm.",
+         subject="Data Structures", unit="Unit 3", marks=6, difficulty="medium",
+         co="CO3", bl="apply", kc="procedural", pi="PI2.2"),
+    dict(text="Describe how a doubly linked list differs from a singly linked list. Illustrate with a diagram.",
+         subject="Data Structures", unit="Unit 2", marks=6, difficulty="medium",
+         co="CO2", bl="understand", kc="conceptual", pi="PI2.1"),
+    dict(text="Explain graph representation using adjacency matrix and adjacency list with examples.",
+         subject="Data Structures", unit="Unit 5", marks=6, difficulty="medium",
+         co="CO3", bl="understand", kc="conceptual", pi="PI2.1"),
+    dict(text="Apply binary search on a sorted array [2,4,6,8,10,12,14,16,18,20] to find 12. Trace all steps.",
+         subject="Data Structures", unit="Unit 3", marks=6, difficulty="medium",
+         co="CO3", bl="apply", kc="procedural", pi="PI2.2"),
+    # Hard (10)
+    dict(text="Design and implement a hash table with chaining collision resolution. Analyse average and worst-case time complexity.",
+         subject="Data Structures", unit="Unit 5", marks=10, difficulty="hard",
+         co="CO5", bl="create", kc="procedural", pi="PI3.1"),
+    dict(text="Compare and analyse the performance of merge sort and quick sort. Justify which is preferable for large datasets.",
+         subject="Data Structures", unit="Unit 3", marks=10, difficulty="hard",
+         co="CO4", bl="analyse", kc="metacognitive", pi="PI3.2"),
+    dict(text="Construct an AVL tree by inserting keys: 30, 20, 10, 25, 40, 50, 35. Show all rotations performed.",
+         subject="Data Structures", unit="Unit 4", marks=10, difficulty="hard",
+         co="CO5", bl="create", kc="procedural", pi="PI3.1"),
+    dict(text="Develop a graph representation and implement BFS and DFS traversal. Trace on a 6-node graph.",
+         subject="Data Structures", unit="Unit 5", marks=10, difficulty="hard",
+         co="CO5", bl="create", kc="procedural", pi="PI3.2"),
+    dict(text="Evaluate the time and space complexity of Quicksort, Mergesort, and Heapsort. Recommend the best for a real-time embedded system.",
+         subject="Data Structures", unit="Unit 3", marks=10, difficulty="hard",
+         co="CO4", bl="evaluate", kc="metacognitive", pi="PI3.1"),
+    dict(text="Design a priority queue using a min-heap. Implement insert and extract-min operations with full complexity analysis.",
+         subject="Data Structures", unit="Unit 4", marks=10, difficulty="hard",
+         co="CO5", bl="create", kc="procedural", pi="PI3.1"),
+    dict(text="Analyse Dijkstra's shortest path algorithm on a weighted graph with 5 nodes. Show step-by-step execution.",
+         subject="Data Structures", unit="Unit 5", marks=10, difficulty="hard",
+         co="CO4", bl="analyse", kc="metacognitive", pi="PI3.2"),
+    dict(text="Construct a B-tree of order 3 by inserting: 10, 20, 5, 6, 12, 30, 7, 17. Show all splits.",
+         subject="Data Structures", unit="Unit 4", marks=10, difficulty="hard",
+         co="CO5", bl="create", kc="procedural", pi="PI3.1"),
+    dict(text="Evaluate the efficiency of different graph traversal algorithms for detecting cycles. Justify with proof.",
+         subject="Data Structures", unit="Unit 5", marks=10, difficulty="hard",
+         co="CO4", bl="evaluate", kc="metacognitive", pi="PI3.2"),
+    dict(text="Design a dynamic memory allocation system using free lists. Analyse fragmentation and compare best-fit, worst-fit, and first-fit strategies.",
+         subject="Data Structures", unit="Unit 2", marks=10, difficulty="hard",
+         co="CO5", bl="create", kc="metacognitive", pi="PI3.1"),
+]
+
+# ═══════════════════════════════════════════════════════════════════════════
+# ARTS & SCIENCE – Introduction to Computer Science  (30 questions)
+# ═══════════════════════════════════════════════════════════════════════════
+ARTS_SCIENCE_QUESTIONS = [
+    # Easy (10)
+    dict(text="Define an algorithm and state its characteristics.",
+         subject="Introduction to Computer Science", unit="Unit 1", marks=2, difficulty="easy",
+         co="CO1", po="PO1", pso="PSO1"),
+    dict(text="List any four applications of computers in daily life.",
+         subject="Introduction to Computer Science", unit="Unit 1", marks=2, difficulty="easy",
+         co="CO1", po="PO1", pso="PSO1"),
+    dict(text="Name the different generations of computers and their key technologies.",
+         subject="Introduction to Computer Science", unit="Unit 1", marks=2, difficulty="easy",
+         co="CO1", po="PO2", pso="PSO1"),
+    dict(text="Define primary memory and secondary memory with examples.",
+         subject="Introduction to Computer Science", unit="Unit 2", marks=2, difficulty="easy",
+         co="CO1", po="PO1", pso="PSO1"),
+    dict(text="State the difference between hardware and software.",
+         subject="Introduction to Computer Science", unit="Unit 2", marks=2, difficulty="easy",
+         co="CO1", po="PO1", pso="PSO1"),
+    dict(text="Identify the function of an operating system.",
+         subject="Introduction to Computer Science", unit="Unit 3", marks=2, difficulty="easy",
+         co="CO2", po="PO2", pso="PSO2"),
+    dict(text="List the types of programming languages with one example each.",
+         subject="Introduction to Computer Science", unit="Unit 4", marks=2, difficulty="easy",
+         co="CO2", po="PO2", pso="PSO2"),
+    dict(text="Define the Internet. Name any three services provided by the Internet.",
+         subject="Introduction to Computer Science", unit="Unit 5", marks=2, difficulty="easy",
+         co="CO2", po="PO3", pso="PSO2"),
+    dict(text="State the difference between a compiler and an interpreter.",
+         subject="Introduction to Computer Science", unit="Unit 4", marks=2, difficulty="easy",
+         co="CO2", po="PO2", pso="PSO2"),
+    dict(text="Name any four input devices and four output devices.",
+         subject="Introduction to Computer Science", unit="Unit 2", marks=2, difficulty="easy",
+         co="CO1", po="PO1", pso="PSO1"),
+    # Medium (10)
+    dict(text="Explain the von Neumann architecture of a computer with a block diagram.",
+         subject="Introduction to Computer Science", unit="Unit 2", marks=5, difficulty="medium",
+         co="CO2", po="PO2", pso="PSO1"),
+    dict(text="Describe the functions of an operating system and explain any two types.",
+         subject="Introduction to Computer Science", unit="Unit 3", marks=5, difficulty="medium",
+         co="CO3", po="PO2", pso="PSO2"),
+    dict(text="Explain the differences between machine language, assembly language, and high-level language.",
+         subject="Introduction to Computer Science", unit="Unit 4", marks=5, difficulty="medium",
+         co="CO3", po="PO3", pso="PSO2"),
+    dict(text="Describe the client-server model with a suitable real-world example.",
+         subject="Introduction to Computer Science", unit="Unit 5", marks=5, difficulty="medium",
+         co="CO3", po="PO3", pso="PSO2"),
+    dict(text="Explain the concept of a DBMS and its advantages over a traditional file system.",
+         subject="Introduction to Computer Science", unit="Unit 3", marks=5, difficulty="medium",
+         co="CO3", po="PO4", pso="PSO2"),
+    dict(text="Describe the binary number system and convert (125)10 to binary.",
+         subject="Introduction to Computer Science", unit="Unit 1", marks=5, difficulty="medium",
+         co="CO2", po="PO2", pso="PSO1"),
+    dict(text="Explain the OSI model and describe the function of any four layers.",
+         subject="Introduction to Computer Science", unit="Unit 5", marks=5, difficulty="medium",
+         co="CO3", po="PO3", pso="PSO2"),
+    dict(text="Describe the fetch-decode-execute cycle of a CPU with a diagram.",
+         subject="Introduction to Computer Science", unit="Unit 2", marks=5, difficulty="medium",
+         co="CO3", po="PO2", pso="PSO1"),
+    dict(text="Explain structured programming and its advantages over unstructured programming.",
+         subject="Introduction to Computer Science", unit="Unit 4", marks=5, difficulty="medium",
+         co="CO3", po="PO3", pso="PSO2"),
+    dict(text="Describe cloud computing and explain its service models: IaaS, PaaS, and SaaS.",
+         subject="Introduction to Computer Science", unit="Unit 5", marks=5, difficulty="medium",
+         co="CO3", po="PO4", pso="PSO3"),
+    # Hard (10)
+    dict(text="Analyse the impact of artificial intelligence on employment and society. Justify with real-world examples.",
+         subject="Introduction to Computer Science", unit="Unit 5", marks=10, difficulty="hard",
+         co="CO5", po="PO5", pso="PSO3"),
+    dict(text="Design an entity-relationship diagram for a library management system. Identify all entities, attributes, and relationships.",
+         subject="Introduction to Computer Science", unit="Unit 3", marks=10, difficulty="hard",
+         co="CO4", po="PO4", pso="PSO2"),
+    dict(text="Evaluate the trade-offs between CPU scheduling algorithms (FCFS, SJF, Round Robin). Recommend the best for a multi-user system.",
+         subject="Introduction to Computer Science", unit="Unit 3", marks=10, difficulty="hard",
+         co="CO5", po="PO4", pso="PSO3"),
+    dict(text="Develop a pseudocode algorithm for selection sort. Trace the algorithm with 7 values.",
+         subject="Introduction to Computer Science", unit="Unit 4", marks=10, difficulty="hard",
+         co="CO4", po="PO3", pso="PSO2"),
+    dict(text="Analyse security threats in e-commerce. Design a solution architecture addressing authentication and data privacy.",
+         subject="Introduction to Computer Science", unit="Unit 5", marks=10, difficulty="hard",
+         co="CO5", po="PO5", pso="PSO3"),
+    dict(text="Compare relational and non-relational databases. Evaluate their suitability for a real-time social media application.",
+         subject="Introduction to Computer Science", unit="Unit 3", marks=10, difficulty="hard",
+         co="CO5", po="PO4", pso="PSO3"),
+    dict(text="Design a network topology for a college campus connecting 5 departments. Justify your choice of topology and hardware.",
+         subject="Introduction to Computer Science", unit="Unit 5", marks=10, difficulty="hard",
+         co="CO4", po="PO4", pso="PSO3"),
+    dict(text="Evaluate the role of big data analytics in modern healthcare. Discuss ethical implications and challenges.",
+         subject="Introduction to Computer Science", unit="Unit 5", marks=10, difficulty="hard",
+         co="CO5", po="PO5", pso="PSO3"),
+    dict(text="Analyse process scheduling vs thread scheduling. Create a Gantt chart for a given set of processes.",
+         subject="Introduction to Computer Science", unit="Unit 3", marks=10, difficulty="hard",
+         co="CO4", po="PO4", pso="PSO2"),
+    dict(text="Construct a truth table for a full adder circuit. Design the logic circuit using basic gates.",
+         subject="Introduction to Computer Science", unit="Unit 1", marks=10, difficulty="hard",
+         co="CO4", po="PO3", pso="PSO2"),
+]
+
+# ═══════════════════════════════════════════════════════════════════════════
+# SCHOOL – Science Class 10  (30 questions)
+# ═══════════════════════════════════════════════════════════════════════════
+SCHOOL_QUESTIONS = [
+    # Easy (10)
+    dict(text="Define chemical reaction. Give one example.",
+         subject="Science", unit="Chapter 1", marks=1, difficulty="easy",
+         learning_outcome="LO1", chapter="Chemical Reactions and Equations"),
+    dict(text="State Newton's first law of motion.",
+         subject="Science", unit="Chapter 9", marks=1, difficulty="easy",
+         learning_outcome="LO1", chapter="Force and Laws of Motion"),
+    dict(text="Name the process by which green plants prepare their own food.",
+         subject="Science", unit="Chapter 6", marks=1, difficulty="easy",
+         learning_outcome="LO1", chapter="Life Processes"),
+    dict(text="Define an ecosystem and give one example.",
+         subject="Science", unit="Chapter 15", marks=1, difficulty="easy",
+         learning_outcome="LO1", chapter="Our Environment"),
+    dict(text="State Ohm's Law.",
+         subject="Science", unit="Chapter 12", marks=1, difficulty="easy",
+         learning_outcome="LO1", chapter="Electricity"),
+    dict(text="Name the male and female reproductive organs in flowering plants.",
+         subject="Science", unit="Chapter 8", marks=1, difficulty="easy",
+         learning_outcome="LO1", chapter="How do Organisms Reproduce?"),
+    dict(text="Define refraction of light.",
+         subject="Science", unit="Chapter 11", marks=1, difficulty="easy",
+         learning_outcome="LO1", chapter="Light"),
+    dict(text="State the difference between acids and bases.",
+         subject="Science", unit="Chapter 2", marks=1, difficulty="easy",
+         learning_outcome="LO1", chapter="Acids, Bases and Salts"),
+    dict(text="Name the four chambers of the human heart.",
+         subject="Science", unit="Chapter 6", marks=1, difficulty="easy",
+         learning_outcome="LO1", chapter="Life Processes"),
+    dict(text="List the three types of levers with one example each.",
+         subject="Science", unit="Chapter 10", marks=1, difficulty="easy",
+         learning_outcome="LO2", chapter="Gravitation"),
+    # Medium (10)
+    dict(text="Explain the types of chemical reactions with one balanced equation for each.",
+         subject="Science", unit="Chapter 1", marks=3, difficulty="medium",
+         learning_outcome="LO3", chapter="Chemical Reactions and Equations"),
+    dict(text="Describe the process of photosynthesis and write the overall chemical equation.",
+         subject="Science", unit="Chapter 6", marks=3, difficulty="medium",
+         learning_outcome="LO3", chapter="Life Processes"),
+    dict(text="Explain Newton's three laws of motion with real-life examples.",
+         subject="Science", unit="Chapter 9", marks=3, difficulty="medium",
+         learning_outcome="LO3", chapter="Force and Laws of Motion"),
+    dict(text="Describe how electric current relates to potential difference. Solve: a 6 ohm resistor connected to 12V supply.",
+         subject="Science", unit="Chapter 12", marks=3, difficulty="medium",
+         learning_outcome="LO4", chapter="Electricity"),
+    dict(text="Explain the refraction of light through a glass slab with a ray diagram.",
+         subject="Science", unit="Chapter 11", marks=3, difficulty="medium",
+         learning_outcome="LO3", chapter="Light"),
+    dict(text="Describe the water cycle and its importance for maintaining life on Earth.",
+         subject="Science", unit="Chapter 14", marks=3, difficulty="medium",
+         learning_outcome="LO3", chapter="Sources of Energy"),
+    dict(text="Explain how the human respiratory system works, from inhalation to gas exchange.",
+         subject="Science", unit="Chapter 6", marks=3, difficulty="medium",
+         learning_outcome="LO3", chapter="Life Processes"),
+    dict(text="Describe the formation of an image in a concave mirror for an object at the centre of curvature.",
+         subject="Science", unit="Chapter 11", marks=3, difficulty="medium",
+         learning_outcome="LO4", chapter="Light"),
+    dict(text="Explain the food chain and food web with an example from a forest ecosystem.",
+         subject="Science", unit="Chapter 15", marks=3, difficulty="medium",
+         learning_outcome="LO3", chapter="Our Environment"),
+    dict(text="Describe how binary fission occurs in Amoeba. Compare with budding in Hydra.",
+         subject="Science", unit="Chapter 8", marks=3, difficulty="medium",
+         learning_outcome="LO3", chapter="How do Organisms Reproduce?"),
+    # Hard (10)
+    dict(text="Analyse the factors affecting rate of a chemical reaction. Design an experiment to demonstrate the effect of temperature.",
+         subject="Science", unit="Chapter 1", marks=5, difficulty="hard",
+         learning_outcome="LO5", chapter="Chemical Reactions and Equations"),
+    dict(text="Evaluate the impact of deforestation on biodiversity and climate change. Suggest sustainable solutions.",
+         subject="Science", unit="Chapter 15", marks=5, difficulty="hard",
+         learning_outcome="LO5", chapter="Our Environment"),
+    dict(text="A circuit has resistors 2 ohm, 4 ohm, and 6 ohm in parallel with 12V. Calculate total resistance and current from battery.",
+         subject="Science", unit="Chapter 12", marks=5, difficulty="hard",
+         learning_outcome="LO5", chapter="Electricity"),
+    dict(text="Analyse advantages and disadvantages of renewable energy sources. Compare solar and wind energy for rural areas.",
+         subject="Science", unit="Chapter 14", marks=5, difficulty="hard",
+         learning_outcome="LO5", chapter="Sources of Energy"),
+    dict(text="Explain Mendel's laws and apply the law of segregation to predict offspring ratios in a monohybrid cross.",
+         subject="Science", unit="Chapter 9", marks=5, difficulty="hard",
+         learning_outcome="LO5", chapter="Heredity and Evolution"),
+    dict(text="Evaluate Darwin's theory of natural selection. Discuss how it explains antibiotic resistance in bacteria.",
+         subject="Science", unit="Chapter 9", marks=5, difficulty="hard",
+         learning_outcome="LO5", chapter="Heredity and Evolution"),
+    dict(text="A concave lens has focal length 15cm. Object placed 45cm from lens. Calculate image position and magnification.",
+         subject="Science", unit="Chapter 11", marks=5, difficulty="hard",
+         learning_outcome="LO5", chapter="Light"),
+    dict(text="Analyse the role of hormones in the endocrine system. Compare nervous and endocrine coordination.",
+         subject="Science", unit="Chapter 7", marks=5, difficulty="hard",
+         learning_outcome="LO5", chapter="Control and Coordination"),
+    dict(text="Design a water purification system for a village using natural resources. Consider biological, physical, and chemical methods.",
+         subject="Science", unit="Chapter 14", marks=5, difficulty="hard",
+         learning_outcome="LO5", chapter="Sources of Energy"),
+    dict(text="Evaluate the human impact on the nitrogen cycle and its consequences for agriculture. Propose mitigation strategies.",
+         subject="Science", unit="Chapter 15", marks=5, difficulty="hard",
+         learning_outcome="LO5", chapter="Our Environment"),
+]
+
+ALL_DATA = [
+    ('engineering',  ENGINEERING_QUESTIONS),
+    ('arts_science', ARTS_SCIENCE_QUESTIONS),
+    ('school',       SCHOOL_QUESTIONS),
+]
+
+with app.app_context():
+    PaperTemplate.seed_defaults()
+    print("✓ Default templates seeded.")
+
+    total_seeded = 0
+    for inst_type, questions in ALL_DATA:
+        existing = mongo.db.questions.count_documents({'institution_type': inst_type})
+        if existing > 0:
+            print(f"  ⚠  {inst_type}: {existing} questions already exist — skipping.")
+            continue
+        docs = []
+        for q in questions:
+            doc = dict(q)
+            doc['institution_type'] = inst_type
+            doc['created_by'] = 'seed'
+            doc['created_at'] = datetime.utcnow()
+            for field in ['co','bl','kc','pi','po','pso','chapter','learning_outcome']:
+                doc.setdefault(field, '')
+            docs.append(doc)
+        mongo.db.questions.insert_many(docs)
+        print(f"  ✓  {inst_type}: {len(docs)} questions seeded.")
+        total_seeded += len(docs)
+
+    print(f"\n✓ Total questions seeded: {total_seeded}")
+    print("✓ Database ready!  Run the app:  python app.py")
