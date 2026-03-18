@@ -1,37 +1,50 @@
-from flask import Flask, session, redirect, url_for, request
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
+from flask import Flask, session
 from datetime import timedelta
-from config import Config
-from extensions import mongo, bcrypt, login_manager, mail
-from routes.auth     import auth_bp
-from routes.dashboard import dashboard_bp
-from routes.questions import questions_bp
-from routes.mapping   import mapping_bp
-from routes.paper_templates import templates_bp
-from routes.generation import generation_bp
-from routes.analytics  import analytics_bp
-from routes.dev        import dev_bp
-from routes.settings   import settings_bp
-from routes.editor     import editor_bp
 
-def create_app(config_class=Config):
+def create_app():
     app = Flask(__name__)
-    app.config.from_object(config_class)
 
-    # Permanent session with timeout
-    app.permanent_session_lifetime = timedelta(seconds=config_class.PERMANENT_SESSION_LIFETIME)
+    MONGO_URI = os.environ.get('MONGO_URI', '')
+    print(f"[STARTUP] MONGO_URI = {MONGO_URI[:40] if MONGO_URI else 'EMPTY - NOT LOADED'}")
 
+    app.config['SECRET_KEY']            = os.environ.get('SECRET_KEY', 'fallback-key')
+    app.config['MONGO_URI']             = MONGO_URI
+    app.config['DEBUG']                 = False
+    app.permanent_session_lifetime      = timedelta(seconds=1800)
+    app.config['MAIL_SERVER']           = 'smtp.gmail.com'
+    app.config['MAIL_PORT']             = 587
+    app.config['MAIL_USE_TLS']          = True
+    app.config['MAIL_USERNAME']         = os.environ.get('MAIL_USERNAME', '')
+    app.config['MAIL_PASSWORD']         = os.environ.get('MAIL_APP_PASSWORD', '')
+    app.config['MAIL_DEFAULT_SENDER']   = os.environ.get('MAIL_USERNAME', '')
+
+    from extensions import mongo, bcrypt, login_manager, mail
     mongo.init_app(app)
     bcrypt.init_app(app)
     login_manager.init_app(app)
     mail.init_app(app)
 
-    login_manager.login_view         = 'auth.login'
-    login_manager.login_message      = 'Please log in to access this page.'
+    login_manager.login_view             = 'auth.login'
     login_manager.login_message_category = 'info'
 
     @app.before_request
     def make_session_permanent():
         session.permanent = True
+
+    from routes.auth            import auth_bp
+    from routes.dashboard       import dashboard_bp
+    from routes.questions       import questions_bp
+    from routes.mapping         import mapping_bp
+    from routes.paper_templates import templates_bp
+    from routes.generation      import generation_bp
+    from routes.analytics       import analytics_bp
+    from routes.dev             import dev_bp
+    from routes.settings        import settings_bp
+    from routes.editor          import editor_bp
 
     app.register_blueprint(auth_bp,       url_prefix='/auth')
     app.register_blueprint(dashboard_bp,  url_prefix='/')
@@ -48,6 +61,5 @@ def create_app(config_class=Config):
 
 if __name__ == '__main__':
     app = create_app()
-    import os
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
