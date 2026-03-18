@@ -2,17 +2,12 @@ from flask_login import UserMixin
 from bson import ObjectId
 from datetime import datetime, timedelta
 import random, string
-from extensions import mongo, bcrypt, login_manager
+from extensions import mongo, bcrypt
 
 SUPERADMIN_EMAIL = "antoagnel289"
 
 def is_superadmin(email):
     return email and email.lower().startswith("antoagnel289")
-
-@login_manager.user_loader
-def load_user(user_id):
-    user = mongo.db.users.find_one({'_id': ObjectId(user_id)})
-    return User(user) if user else None
 
 class User(UserMixin):
     def __init__(self, user_doc):
