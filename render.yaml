@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: qexora
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python app.py
+    envVars:
+      - key: MONGO_URI
+        value: mongodb+srv://qexora:qexora1234@qexora-cluster.azxyehk.mongodb.net/qexora_db?retryWrites=true&w=majority
+      - key: SECRET_KEY
+        value: qexora-super-secret-key-2026
+      - key: DEBUG
+        value: "False"

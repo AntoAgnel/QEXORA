@@ -4,25 +4,38 @@ load_dotenv()
 
 from flask import Flask, session
 from datetime import timedelta
+from flask_pymongo import PyMongo
+from flask_bcrypt import Bcrypt
+from flask_login import LoginManager
+from flask_mail import Mail
+
+# Create extensions without app
+mongo         = PyMongo()
+bcrypt        = Bcrypt()
+login_manager = LoginManager()
+mail          = Mail()
 
 def create_app():
     app = Flask(__name__)
 
+    # Get URI from environment
     MONGO_URI = os.environ.get('MONGO_URI', '')
-    print(f"[STARTUP] MONGO_URI = {MONGO_URI[:40] if MONGO_URI else 'EMPTY - NOT LOADED'}")
+    print(f"[STARTUP] MONGO_URI loaded: {'YES' if MONGO_URI else 'NO'}")
+    print(f"[STARTUP] URI preview: {MONGO_URI[:50] if MONGO_URI else 'EMPTY'}")
 
-    app.config['SECRET_KEY']            = os.environ.get('SECRET_KEY', 'fallback-key')
-    app.config['MONGO_URI']             = MONGO_URI
-    app.config['DEBUG']                 = False
-    app.permanent_session_lifetime      = timedelta(seconds=1800)
-    app.config['MAIL_SERVER']           = 'smtp.gmail.com'
-    app.config['MAIL_PORT']             = 587
-    app.config['MAIL_USE_TLS']          = True
-    app.config['MAIL_USERNAME']         = os.environ.get('MAIL_USERNAME', '')
-    app.config['MAIL_PASSWORD']         = os.environ.get('MAIL_APP_PASSWORD', '')
-    app.config['MAIL_DEFAULT_SENDER']   = os.environ.get('MAIL_USERNAME', '')
+    # Set all config directly
+    app.config['SECRET_KEY']          = os.environ.get('SECRET_KEY', 'qexora-fallback-key')
+    app.config['MONGO_URI']           = MONGO_URI
+    app.config['DEBUG']               = False
+    app.config['MAIL_SERVER']         = 'smtp.gmail.com'
+    app.config['MAIL_PORT']           = 587
+    app.config['MAIL_USE_TLS']        = True
+    app.config['MAIL_USERNAME']       = os.environ.get('MAIL_USERNAME', '')
+    app.config['MAIL_PASSWORD']       = os.environ.get('MAIL_APP_PASSWORD', '')
+    app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_USERNAME', '')
+    app.permanent_session_lifetime    = timedelta(seconds=1800)
 
-    from extensions import mongo, bcrypt, login_manager, mail
+    # Initialize extensions with app
     mongo.init_app(app)
     bcrypt.init_app(app)
     login_manager.init_app(app)
@@ -30,6 +43,14 @@ def create_app():
 
     login_manager.login_view             = 'auth.login'
     login_manager.login_message_category = 'info'
+
+    # Test connection on startup
+    with app.app_context():
+        try:
+            mongo.db.list_collection_names()
+            print("[STARTUP] ✓ MongoDB connected successfully")
+        except Exception as e:
+            print(f"[STARTUP] ✗ MongoDB connection failed: {e}")
 
     @app.before_request
     def make_session_permanent():

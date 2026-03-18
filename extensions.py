@@ -1,9 +1,1 @@
-from flask_pymongo import PyMongo
-from flask_bcrypt import Bcrypt
-from flask_login import LoginManager
-from flask_mail import Mail
-
-mongo         = PyMongo()
-bcrypt        = Bcrypt()
-login_manager = LoginManager()
-mail          = Mail()
+from app import mongo, bcrypt, login_manager, mail
