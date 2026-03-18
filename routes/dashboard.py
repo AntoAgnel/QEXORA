@@ -18,3 +18,38 @@ def index():
         'recent_papers':   QuestionPaper.get_all(current_user.id)[:5]
     }
     return render_template('dashboard/index.html', stats=stats)
+
+@dashboard_bp.route('/run-seed')
+def run_seed():
+    from extensions import mongo
+    from models.paper_template import PaperTemplate
+    from datetime import datetime
+    
+    try:
+        # Seed templates
+        PaperTemplate.seed_defaults()
+        
+        # Check questions
+        total = mongo.db.questions.count_documents({})
+        if total > 0:
+            return f"✓ Already seeded! Total questions: {total}"
+        
+        # Seed questions
+        from seed_db import ENGINEERING_QUESTIONS, ARTS_SCIENCE_QUESTIONS, SCHOOL_QUESTIONS, ALL_DATA
+        seeded = 0
+        for inst_type, questions in ALL_DATA:
+            docs = []
+            for q in questions:
+                doc = dict(q)
+                doc['institution_type'] = inst_type
+                doc['created_by'] = 'seed'
+                doc['created_at'] = datetime.utcnow()
+                for field in ['co','bl','kc','pi','po','pso','chapter','learning_outcome']:
+                    doc.setdefault(field, '')
+                docs.append(doc)
+            mongo.db.questions.insert_many(docs)
+            seeded += len(docs)
+        
+        return f"✓ Seeded successfully! {seeded} questions added."
+    except Exception as e:
+        return f"✗ Error: {str(e)}"
