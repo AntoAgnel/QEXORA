@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>QEXORA – Intelligent Academic Mapping & Question Paper Generation</title>
+  <meta name="description" content="QEXORA is a web application for automated academic outcome mapping and question paper generation for Engineering, Arts & Science, and School institutions."/>
+  <meta property="og:title" content="QEXORA – Intelligent Academic Mapping System"/>
+  <meta property="og:description" content="Automated question paper generation with Bloom's Taxonomy mapping, CO attainment analytics, and PDF export."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --accent:  #6c63ff;
+      --accent2: #00d4aa;
+      --bg:      #0e0f14;
+      --surface: #16181f;
+      --border:  #2a2d3a;
+      --text:    #e8eaf0;
+      --muted:   #8a8fa8;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0;
+      height: 60px;
+      background: rgba(14,15,20,.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center;
+      padding: 0 2rem;
+      z-index: 100;
+    }
+    .nav-logo {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.25rem; font-weight: 800;
+      letter-spacing: 2px; color: var(--text);
+      text-decoration: none;
+    }
+    .nav-logo span { color: var(--accent); }
+    .nav-links { margin-left: auto; display: flex; align-items: center; gap: 2rem; }
+    .nav-links a {
+      color: var(--muted); text-decoration: none;
+      font-size: 0.875rem; font-weight: 500;
+      transition: color .2s;
+    }
+    .nav-links a:hover { color: var(--text); }
+    .nav-cta {
+      background: var(--accent);
+      color: #fff !important;
+      padding: 8px 18px;
+      border-radius: 8px;
+      font-weight: 600 !important;
+      transition: background .2s !important;
+    }
+    .nav-cta:hover { background: #5850e8 !important; }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      text-align: center;
+      padding: 7rem 2rem 5rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      width: 700px; height: 700px;
+      background: radial-gradient(circle, rgba(108,99,255,.16) 0%, transparent 65%);
+      top: -150px; left: 50%; transform: translateX(-50%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    .hero::after {
+      content: '';
+      position: absolute;
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(0,212,170,.1) 0%, transparent 65%);
+      bottom: 0; right: 0;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    .hero-inner { position: relative; z-index: 1; max-width: 800px; }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(108,99,255,.1);
+      border: 1px solid rgba(108,99,255,.25);
+      color: var(--accent);
+      padding: 6px 18px; border-radius: 20px;
+      font-size: 0.78rem; font-weight: 700;
+      letter-spacing: 1px; text-transform: uppercase;
+      margin-bottom: 1.75rem;
+    }
+    .hero-title {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2.6rem, 6vw, 4.8rem);
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 1.5rem;
+      letter-spacing: -1px;
+    }
+    .hero-title .q  { color: var(--accent); }
+    .hero-title .hl { color: var(--accent2); }
+    .hero-sub {
+      font-size: 1.1rem;
+      color: var(--muted);
+      max-width: 580px;
+      margin: 0 auto 2.5rem;
+      line-height: 1.8;
+    }
+    .hero-btns {
+      display: flex; gap: 1rem;
+      justify-content: center; flex-wrap: wrap;
+    }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--accent); color: #fff;
+      padding: 14px 30px; border-radius: 10px;
+      font-size: 0.95rem; font-weight: 600;
+      text-decoration: none; transition: all .2s;
+    }
+    .btn-primary:hover { background: #5850e8; transform: translateY(-2px); box-shadow: 0 8px 28px rgba(108,99,255,.35); }
+    .btn-outline {
+      display: inline-flex; align-items: center; gap: 8px;
+      border: 1px solid var(--border); color: var(--text);
+      padding: 14px 30px; border-radius: 10px;
+      font-size: 0.95rem; font-weight: 500;
+      text-decoration: none; transition: all .2s;
+    }
+    .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── STATS BAR ── */
+    .stats-bar {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 2.5rem 2rem;
+      display: flex; justify-content: center; gap: 5rem;
+      flex-wrap: wrap;
+    }
+    .stat-item { text-align: center; }
+    .stat-num {
+      font-family: 'Syne', sans-serif;
+      font-size: 2.2rem; font-weight: 800;
+      color: var(--accent); display: block;
+    }
+    .stat-lbl { font-size: 0.8rem; color: var(--muted); font-weight: 500; margin-top: 2px; }
+
+    /* ── SECTION ── */
+    section { padding: 6rem 2rem; }
+    .container { max-width: 1100px; margin: 0 auto; }
+    .section-badge {
+      font-size: 0.72rem; text-transform: uppercase;
+      letter-spacing: 2px; color: var(--accent2);
+      font-weight: 700; margin-bottom: 14px; display: block;
+    }
+    .section-title {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+      font-weight: 700; margin-bottom: 1rem; line-height: 1.2;
+    }
+    .section-sub {
+      color: var(--muted); font-size: 1rem;
+      max-width: 580px; line-height: 1.8;
+    }
+
+    /* ── FEATURES ── */
+    #features { background: var(--surface); }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+      gap: 1.5rem; margin-top: 3rem;
+    }
+    .feature-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+      transition: border-color .2s, transform .2s;
+    }
+    .feature-card:hover { border-color: var(--accent); transform: translateY(-4px); }
+    .feature-icon {
+      width: 50px; height: 50px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 1.1rem; font-size: 1.4rem;
+    }
+    .fi-purple { background: rgba(108,99,255,.15); }
+    .fi-teal   { background: rgba(0,212,170,.15); }
+    .fi-orange { background: rgba(245,166,35,.15); }
+    .fi-blue   { background: rgba(66,133,244,.15); }
+    .fi-red    { background: rgba(255,107,107,.15); }
+    .fi-green  { background: rgba(52,168,83,.15); }
+    .feature-title { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; margin-bottom: 10px; }
+    .feature-desc  { font-size: 0.875rem; color: var(--muted); line-height: 1.7; }
+
+    /* ── HOW IT WORKS ── */
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem; margin-top: 3rem;
+    }
+    .step-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px; padding: 2rem;
+      text-align: center; transition: border-color .2s;
+    }
+    .step-card:hover { border-color: var(--accent2); }
+    .step-num {
+      width: 46px; height: 46px;
+      background: var(--accent); color: #fff;
+      border-radius: 50%;
+      font-family: 'Syne', sans-serif;
+      font-weight: 800; font-size: 1.1rem;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 1.1rem;
+    }
+    .step-title { font-family: 'Syne', sans-serif; font-weight: 700; margin-bottom: 8px; }
+    .step-desc  { font-size: 0.85rem; color: var(--muted); line-height: 1.65; }
+
+    /* ── INSTITUTION CARDS ── */
+    .inst-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+      gap: 1.5rem; margin-top: 3rem;
+    }
+    .inst-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px; padding: 2rem;
+      transition: border-color .2s;
+    }
+    .inst-card:hover { border-color: var(--accent2); }
+    .inst-emoji { font-size: 2.5rem; margin-bottom: 1rem; display: block; }
+    .inst-title { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 700; margin-bottom: 10px; }
+    .inst-desc  { font-size: 0.875rem; color: var(--muted); margin-bottom: 1.1rem; line-height: 1.7; }
+    .inst-tags  { display: flex; flex-wrap: wrap; gap: 6px; }
+    .inst-tag {
+      padding: 3px 10px; border-radius: 20px;
+      font-size: 0.72rem; font-weight: 600;
+      background: rgba(108,99,255,.1);
+      color: var(--accent);
+      border: 1px solid rgba(108,99,255,.2);
+    }
+
+    /* ── TECH STACK ── */
+    #tech { background: var(--surface); }
+    .tech-grid { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 2.5rem; }
+    .tech-chip {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px; padding: 10px 18px;
+      font-size: 0.85rem; font-weight: 500;
+      transition: border-color .2s, transform .15s;
+    }
+    .tech-chip:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .tc-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+
+    /* ── MODULES ── */
+    .modules-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 1rem; margin-top: 3rem;
+    }
+    .module-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px; padding: 1.25rem;
+      display: flex; align-items: center; gap: 12px;
+      transition: border-color .2s;
+    }
+    .module-card:hover { border-color: var(--accent); }
+    .module-num {
+      width: 34px; height: 34px; border-radius: 8px;
+      background: rgba(108,99,255,.15);
+      color: var(--accent); font-weight: 800;
+      font-size: 0.85rem;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .module-name { font-size: 0.85rem; font-weight: 600; line-height: 1.4; }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 4rem 2rem;
+      text-align: center;
+    }
+    .footer-logo {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.6rem; font-weight: 800;
+      letter-spacing: 2px; margin-bottom: 1rem;
+    }
+    .footer-logo span { color: var(--accent); }
+    .footer-desc {
+      color: var(--muted); font-size: 0.9rem;
+      margin-bottom: 2rem; max-width: 440px;
+      margin-left: auto; margin-right: auto; line-height: 1.7;
+    }
+    .footer-links {
+      display: flex; gap: 2rem;
+      justify-content: center; flex-wrap: wrap;
+      margin-bottom: 2rem;
+    }
+    .footer-links a {
+      color: var(--muted); text-decoration: none;
+      font-size: 0.875rem; transition: color .2s;
+    }
+    .footer-links a:hover { color: var(--accent); }
+    .footer-copy { color: var(--muted); font-size: 0.78rem; }
+
+    /* ── SCROLL FADE ── */
+    .fade-in {
+      opacity: 0; transform: translateY(22px);
+      transition: opacity .65s ease, transform .65s ease;
+    }
+    .fade-in.visible { opacity: 1; transform: none; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .stats-bar { gap: 2.5rem; }
+      section { padding: 4rem 1.25rem; }
+      .hero { padding: 6rem 1.25rem 4rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo"><span>Q</span>EXORA</a>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#institutions">Institutions</a>
+    <a href="#modules">Modules</a>
+    <a href="#tech">Tech Stack</a>
+    <a href="https://github.com/AntoAgnel/QEXORA" target="_blank" class="nav-cta">View on GitHub →</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge">✦ AI-Powered Academic Platform</div>
+    <h1 class="hero-title">
+      <span class="q">Q</span>EXORA<br>
+      <span class="hl">Intelligent</span> Academic Mapping<br>&amp; Question Paper Generation
+    </h1>
+    <p class="hero-sub">
+      A unified web platform that automates academic outcome mapping,
+      generates balanced question papers, and delivers CO attainment analytics
+      for Engineering, Arts &amp; Science, and School institutions.
+    </p>
+    <div class="hero-btns">
+      <a href="https://github.com/AntoAgnel/QEXORA" target="_blank" class="btn-primary">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+        View on GitHub
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- STATS BAR -->
+<div class="stats-bar">
+  <div class="stat-item"><span class="stat-num">9</span><span class="stat-lbl">System Modules</span></div>
+  <div class="stat-item"><span class="stat-num">3</span><span class="stat-lbl">Institution Types</span></div>
+  <div class="stat-item"><span class="stat-num">90+</span><span class="stat-lbl">Sample Questions</span></div>
+  <div class="stat-item"><span class="stat-num">OBE</span><span class="stat-lbl">Outcome-Based Education</span></div>
+  <div class="stat-item"><span class="stat-num">AI</span><span class="stat-lbl">Groq Llama 3.3 Powered</span></div>
+  <div class="stat-item"><span class="stat-num">NBA</span><span class="stat-lbl">NAAC Compliant</span></div>
+</div>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="container">
+    <span class="section-badge fade-in">Features</span>
+    <h2 class="section-title fade-in">Everything you need for<br>outcome-based assessment</h2>
+    <p class="section-sub fade-in">QEXORA automates the entire examination preparation workflow — from question storage to final PDF export — in one unified platform.</p>
+
+    <div class="features-grid">
+      <div class="feature-card fade-in">
+        <div class="feature-icon fi-purple">🧠</div>
+        <div class="feature-title">AI-Powered Mapping Suggestions</div>
+        <div class="feature-desc">Powered by Groq's free Llama 3.3 70B model to intelligently suggest Bloom's Taxonomy Level, Knowledge Category, Course Outcome, and PI codes — with full reasoning for each decision.</div>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="feature-icon fi-teal">⚡</div>
+        <div class="feature-title">Smart Question Selection</div>
+        <div class="feature-desc">Selects questions from your bank ensuring balanced difficulty distribution, complete CO coverage, and proper cognitive skill evaluation based on Bloom's taxonomy.</div>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="feature-icon fi-orange">✏️</div>
+        <div class="feature-title">Visual Paper Editor</div>
+        <div class="feature-desc">Drag-and-drop block editor to customise every element of your question paper — text, images, sections, dividers — before exporting as PDF.</div>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="feature-icon fi-blue">📊</div>
+        <div class="feature-title">CO Attainment Analytics</div>
+        <div class="feature-desc">Automatically generates course outcome coverage reports, Bloom's level distribution charts, and difficulty analytics for every generated paper.</div>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="feature-icon fi-red">📄</div>
+        <div class="feature-title">Professional PDF Export</div>
+        <div class="feature-desc">Exports clean, print-ready A4 PDF question papers with full academic mapping tags, section headers, and outcome summary tables.</div>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="feature-icon fi-green">🔐</div>
+        <div class="feature-title">Secure &amp; Role-Based</div>
+        <div class="feature-desc">Faculty and Admin roles with Google OAuth sign-in, OTP-based password reset via email, 30-minute session timeout, and a dedicated developer panel.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="workflow">
+  <div class="container">
+    <span class="section-badge fade-in">Workflow</span>
+    <h2 class="section-title fade-in">From question to paper in minutes</h2>
+    <p class="section-sub fade-in">A streamlined 5-step process that handles mapping, selection, generation, and export automatically.</p>
+    <div class="steps-grid">
+      <div class="step-card fade-in">
+        <div class="step-num">1</div>
+        <div class="step-title">Select Institution</div>
+        <div class="step-desc">Choose Engineering, Arts &amp; Science, or School to activate the correct academic mapping framework automatically.</div>
+      </div>
+      <div class="step-card fade-in">
+        <div class="step-num">2</div>
+        <div class="step-title">Add Questions</div>
+        <div class="step-desc">Add questions to your centralised bank with auto-suggested Bloom's level, Knowledge Category, CO, and PI code.</div>
+      </div>
+      <div class="step-card fade-in">
+        <div class="step-num">3</div>
+        <div class="step-title">Pick a Template</div>
+        <div class="step-desc">Choose from ready-made templates or create a custom one defining sections, marks, and difficulty ratios.</div>
+      </div>
+      <div class="step-card fade-in">
+        <div class="step-num">4</div>
+        <div class="step-title">Generate Paper</div>
+        <div class="step-desc">One click generates a balanced, outcome-mapped question paper with complete analytics and CO attainment report.</div>
+      </div>
+      <div class="step-card fade-in">
+        <div class="step-num">5</div>
+        <div class="step-title">Edit &amp; Export</div>
+        <div class="step-desc">Open in the visual editor to customise layout and content, then export as a professional A4 PDF or print directly.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- INSTITUTIONS -->
+<section id="institutions" style="background:var(--surface)">
+  <div class="container">
+    <span class="section-badge fade-in">Multi-Institution Support</span>
+    <h2 class="section-title fade-in">Supports every education level</h2>
+    <p class="section-sub fade-in">QEXORA dynamically activates the correct academic mapping framework based on your institution type — all in one platform.</p>
+    <div class="inst-grid">
+      <div class="inst-card fade-in">
+        <span class="inst-emoji">🏛</span>
+        <div class="inst-title">Engineering College</div>
+        <div class="inst-desc">Full NBA / AICTE compliant mapping with Course Outcomes, Bloom's Taxonomy Levels, Knowledge Categories, and Program Indicators for rigorous outcome-based assessment.</div>
+        <div class="inst-tags">
+          <span class="inst-tag">CO1 – CO6</span>
+          <span class="inst-tag">Remember → Create</span>
+          <span class="inst-tag">Factual → Metacognitive</span>
+          <span class="inst-tag">PI1.1 – PI3.4</span>
+        </div>
+      </div>
+      <div class="inst-card fade-in">
+        <span class="inst-emoji">📚</span>
+        <div class="inst-title">Arts &amp; Science College</div>
+        <div class="inst-desc">NAAC compliant mapping with Course Outcomes, Program Outcomes, and Program Specific Outcomes for comprehensive semester assessment preparation.</div>
+        <div class="inst-tags">
+          <span class="inst-tag">CO1 – CO5</span>
+          <span class="inst-tag">PO1 – PO5</span>
+          <span class="inst-tag">PSO1 – PSO3</span>
+        </div>
+      </div>
+      <div class="inst-card fade-in">
+        <span class="inst-emoji">🏫</span>
+        <div class="inst-title">School</div>
+        <div class="inst-desc">Learning outcome–based assessment with chapter coverage, subject-wise organisation, and difficulty level balancing for school-level examinations.</div>
+        <div class="inst-tags">
+          <span class="inst-tag">Chapter Coverage</span>
+          <span class="inst-tag">Learning Outcomes</span>
+          <span class="inst-tag">Easy / Medium / Hard</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+
+<!-- TECH STACK -->
+<section id="tech">
+  <div class="container">
+    <span class="section-badge fade-in">Technology</span>
+    <h2 class="section-title fade-in">Built with modern, open-source tools</h2>
+    <p class="section-sub fade-in">A robust, full-stack Python web application with a MongoDB database and a clean, responsive frontend.</p>
+    <div class="tech-grid">
+      <div class="tech-chip fade-in"><div class="tc-dot" style="background:#3776ab"></div>Python 3.12</div>
+      <div class="tech-chip fade-in"><div class="tc-dot" style="background:#555"></div>Flask 3.0</div>
+      <div class="tech-chip fade-in"><div class="tc-dot" style="background:#00ed64"></div>MongoDB</div>
+      <div class="tech-chip fade-in"><div class="tc-dot" style="background:#e34f26"></div>ReportLab PDF</div>
+      <div class="tech-chip fade-in"><div class="tc-dot" style="background:#4285f4"></div>Google OAuth 2.0</div>
+      <div class="tech-chip fade-in"><div class="tc-dot" style="background:#00d4aa"></div>Flask-Login</div>
+      <div class="tech-chip fade-in"><div class="tc-dot" style="background:#f5a623"></div>Flask-Mail (OTP)</div>
+      <div class="tech-chip fade-in"><div class="tc-dot" style="background:#764abc"></div>Jinja2 Templates</div>
+      <div class="tech-chip fade-in"><div class="tc-dot" style="background:#6c63ff"></div>Flask-Bcrypt</div>
+      <div class="tech-chip fade-in"><div class="tc-dot" style="background:#f97316"></div>Groq API</div>
+      <div class="tech-chip fade-in"><div class="tc-dot" style="background:#a855f7"></div>Llama 3.3 70B</div>
+      <div class="tech-chip fade-in"><div class="tc-dot" style="background:#38b2ac"></div>Vanilla JS &amp; CSS</div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo"><span>Q</span>EXORA</div>
+  <p class="footer-desc">Intelligent Academic Mapping &amp; Question Paper Generation System. Designed to support educators in delivering consistent, outcome-aligned assessments.</p>
+  <div class="footer-links">
+    <a href="#features">Features</a>
+    <a href="#workflow">Workflow</a>
+    <a href="#institutions">Institutions</a>
+    <a href="#modules">Modules</a>
+    <a href="#tech">Tech Stack</a>
+    <a href="https://github.com/AntoAgnel/QEXORA" target="_blank">GitHub</a>
+  </div>
+  <p class="footer-copy">© 2026 QEXORA &nbsp;·&nbsp; MIT License &nbsp;·&nbsp; Built with Python Flask &amp; MongoDB</p>
+</footer>
+
+<script>
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.1 });
+document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
