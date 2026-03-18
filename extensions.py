@@ -1,40 +1,33 @@
-from flask import current_app
-from flask_pymongo import PyMongo
+from pymongo import MongoClient
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager
 from flask_mail import Mail
+import os
 
-# These are accessed via current_app.mongo etc.
-# Kept here for compatibility with models that import from extensions
-def get_mongo():
-    return current_app.mongo
+bcrypt        = Bcrypt()
+login_manager = LoginManager()
+mail          = Mail()
 
-class _MongoProxy:
+class MongoDB:
+    def __init__(self):
+        self._client = None
+        self._db     = None
+
+    def init_app(self, app):
+        uri = app.config.get('MONGO_URI', '')
+        print(f"[MongoDB] Connecting to: {uri[:50]}")
+        try:
+            self._client = MongoClient(uri, serverSelectionTimeoutMS=5000)
+            db_name      = uri.split('/')[-1].split('?')[0] or 'qexora_db'
+            self._db     = self._client[db_name]
+            # Test connection
+            self._client.admin.command('ping')
+            print(f"[MongoDB] ✓ Connected to database: {db_name}")
+        except Exception as e:
+            print(f"[MongoDB] ✗ Connection failed: {e}")
+
     @property
     def db(self):
-        return current_app.mongo.db
-    def init_app(self, app):
-        pass
+        return self._db
 
-class _BcryptProxy:
-    def generate_password_hash(self, pw):
-        return current_app.bcrypt.generate_password_hash(pw)
-    def check_password_hash(self, h, pw):
-        return current_app.bcrypt.check_password_hash(h, pw)
-    def init_app(self, app):
-        pass
-
-class _MailProxy:
-    def send(self, msg):
-        return current_app.mail.send(msg)
-    def init_app(self, app):
-        pass
-
-class _LoginProxy:
-    def init_app(self, app):
-        pass
-
-mongo         = _MongoProxy()
-bcrypt        = _BcryptProxy()
-login_manager = _LoginProxy()
-mail          = _MailProxy()
+mongo = MongoDB()
