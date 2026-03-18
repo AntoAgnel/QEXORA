@@ -4,27 +4,14 @@ load_dotenv()
 
 from flask import Flask, session
 from datetime import timedelta
-from flask_pymongo import PyMongo
-from flask_bcrypt import Bcrypt
-from flask_login import LoginManager
-from flask_mail import Mail
-
-# Create extensions without app
-mongo         = PyMongo()
-bcrypt        = Bcrypt()
-login_manager = LoginManager()
-mail          = Mail()
 
 def create_app():
     app = Flask(__name__)
 
-    # Get URI from environment
     MONGO_URI = os.environ.get('MONGO_URI', '')
-    print(f"[STARTUP] MONGO_URI loaded: {'YES' if MONGO_URI else 'NO'}")
-    print(f"[STARTUP] URI preview: {MONGO_URI[:50] if MONGO_URI else 'EMPTY'}")
+    print(f"[STARTUP] MONGO_URI: {'YES - ' + MONGO_URI[:40] if MONGO_URI else 'EMPTY!'}")
 
-    # Set all config directly
-    app.config['SECRET_KEY']          = os.environ.get('SECRET_KEY', 'qexora-fallback-key')
+    app.config['SECRET_KEY']          = os.environ.get('SECRET_KEY', 'qexora-key')
     app.config['MONGO_URI']           = MONGO_URI
     app.config['DEBUG']               = False
     app.config['MAIL_SERVER']         = 'smtp.gmail.com'
@@ -35,22 +22,35 @@ def create_app():
     app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_USERNAME', '')
     app.permanent_session_lifetime    = timedelta(seconds=1800)
 
-    # Initialize extensions with app
-    mongo.init_app(app)
-    bcrypt.init_app(app)
-    login_manager.init_app(app)
-    mail.init_app(app)
+    from flask_pymongo import PyMongo
+    from flask_bcrypt import Bcrypt
+    from flask_login import LoginManager
+    from flask_mail import Mail
+
+    mongo         = PyMongo(app)
+    bcrypt        = Bcrypt(app)
+    login_manager = LoginManager(app)
+    mail          = Mail(app)
 
     login_manager.login_view             = 'auth.login'
     login_manager.login_message_category = 'info'
 
-    # Test connection on startup
-    with app.app_context():
+    # Store on app so extensions.py can access them
+    app.mongo         = mongo
+    app.bcrypt        = bcrypt
+    app.login_manager = login_manager
+    app.mail          = mail
+
+    # Register user_loader
+    from bson import ObjectId
+    @login_manager.user_loader
+    def load_user(user_id):
+        from models.user import User
         try:
-            mongo.db.list_collection_names()
-            print("[STARTUP] ✓ MongoDB connected successfully")
-        except Exception as e:
-            print(f"[STARTUP] ✗ MongoDB connection failed: {e}")
+            user = mongo.db.users.find_one({'_id': ObjectId(user_id)})
+            return User(user) if user else None
+        except Exception:
+            return None
 
     @app.before_request
     def make_session_permanent():
@@ -78,6 +78,7 @@ def create_app():
     app.register_blueprint(settings_bp,   url_prefix='/settings')
     app.register_blueprint(editor_bp,     url_prefix='/editor')
 
+    print("[STARTUP] ✓ App created successfully")
     return app
 
 if __name__ == '__main__':
